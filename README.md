@@ -26,7 +26,7 @@ Then you need to install `Rtools` to compile the `C++` code.
 
 After you installed `devtools` and `Rtools`, please run the following command :
 ```{r}
-devtools::install_github("define957/manysvms")
+devtools::install_github("define957/SupportVectorLab")
 ```
 Then you can have `SupportVectorLab` package on your PC。
 
