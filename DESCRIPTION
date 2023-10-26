@@ -1,0 +1,16 @@
+Package: SupportVectorLab
+Type: Package
+Title: An R Package Containing Many SVMs
+Version: 0.1.0
+Authors@R: c(person("Jiaqi", "Zhang", role = c("aut", "cre"),
+              email = "zhangjiaqi957957@outlook.com"))
+Maintainer: Zhang Jiaqi <zhangjiaqi957957@outlook.com>
+Description: An R package containing many SVMs with fast C++ dual solve.
+License: file LICENSE
+Encoding: UTF-8
+LazyData: true
+Imports: Rcpp (>= 1.0.10)
+LinkingTo: Rcpp,
+           RcppArmadillo
+RoxygenNote: 7.2.3
+
