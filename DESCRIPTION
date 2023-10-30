@@ -1,11 +1,11 @@
 Package: SupportVectorLab
 Type: Package
-Title: An R Package Containing Many SVMs
+Title: An R Package Containing Many Support Vector Machines
 Version: 0.1.0
 Authors@R: c(person("Jiaqi", "Zhang", role = c("aut", "cre"),
               email = "zhangjiaqi957957@outlook.com"))
 Maintainer: Zhang Jiaqi <zhangjiaqi957957@outlook.com>
-Description: An R package containing many SVMs with fast C++ dual solve.
+Description: An R package containing many SVMs with fast C++ dual solver.
 License: file LICENSE
 Encoding: UTF-8
 LazyData: true
