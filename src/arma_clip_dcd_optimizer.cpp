@@ -18,7 +18,7 @@ Rcpp::List cpp_clip_dcd_optimizer(arma::mat H, arma::mat q,
   unsigned int max_idx = 0;
   double L_val_max;
   double lambda_max;
-  double lambda_opt;
+  double lambda_opt = 0;
   arma::mat numerator(n, 1);
   arma::vec L_idx_val(n);
   arma::vec L_val(n);
