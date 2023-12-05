@@ -14,6 +14,7 @@ Rcpp::List cpp_clip_dcd_optimizer(arma::mat H, arma::mat q,
   unsigned int n = H.n_rows;
 
   unsigned int i = 0;
+  unsigned int j = 0;
   unsigned int max_idx = 0;
   double L_val_max;
   double lambda_max;
@@ -45,10 +46,15 @@ Rcpp::List cpp_clip_dcd_optimizer(arma::mat H, arma::mat q,
       break;
     }
     idx = find(L_val == L_val_max);
-    max_idx = as_scalar(idx(0));
-    lambda_max = as_scalar(L_idx_val(max_idx));
-    lambda_opt = max(as_scalar(lb(max_idx) - u(max_idx)),
-                     min(lambda_max, as_scalar(ub(max_idx) - u(max_idx))));
+    for (j = 0; j < idx.n_elem; j++) {
+      max_idx = as_scalar(idx(j));
+      lambda_max = as_scalar(L_idx_val(max_idx));
+      lambda_opt = max(as_scalar(lb(max_idx) - u(max_idx)),
+                       min(lambda_max, as_scalar(ub(max_idx) - u(max_idx))));
+      if (lambda_opt != 0) {
+        break;
+      }
+    }
     u(max_idx) = u(max_idx) + lambda_opt;
     Huik = H.col(max_idx)*u(max_idx);
     Hu = Hu - Hui.col(max_idx) + Huik;
