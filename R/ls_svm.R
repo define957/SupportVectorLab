@@ -14,7 +14,7 @@ ls_svm_primal_solver <- function(KernelX, y, C = 1,
                                  optimizer = pegasos, ...) {
    gLeastSquares <- function(KernelX, y, w, pars,...) { # gradient of Least Squares loss function
     C <- pars$C
-    xn <- pars$C
+    xn <- pars$xn
     xmn <- nrow(KernelX)
     xmp <- ncol(KernelX)
     sg <- matrix(0, xmp, 1)
