@@ -56,7 +56,7 @@ hinge_tsvm_dual_solver <- function(KernelX, idx, C1, C2, eps, max.steps) {
 hinge_tsvm <- function(X, y, C1 = 1, C2 = 2,
                        kernel = c("linear", "rbf", "poly"),
                        gamma = 1 / ncol(X), degree = 3, coef0 = 0,
-                       eps = 1e-5, max.steps = 300,
+                       eps = 1e-14, max.steps = 4000,
                        solver = c("dual"), fit_intercept = TRUE,
                        randx = 0.1, ...) {
   X <- as.matrix(X)
@@ -74,10 +74,10 @@ hinge_tsvm <- function(X, y, C1 = 1, C2 = 2,
   kso <- kernel_select_option(X, kernel, "primal", randx,
                               gamma, degree, coef0)
   KernelX <- kso$KernelX
+  Kw <- kso$KernelX[kso$sample_idx, ]
   X <- kso$X
   if (fit_intercept == TRUE) {
     KernelX <- cbind(KernelX, 1)
-    X <- cbind(X, 1)
   }
   if (solver == "dual") {
     solver.res <- hinge_tsvm_dual_solver(KernelX, idx, C1, C2, eps, max.steps)
@@ -87,7 +87,8 @@ hinge_tsvm <- function(X, y, C1 = 1, C2 = 2,
                          "gamma" = gamma, "degree" = degree, "coef0" = coef0,
                          "solver" = solver, "coef1" = solver.res$coef1,
                          "coef2" = solver.res$coef2,
-                         "fit_intercept" = fit_intercept)
+                         "fit_intercept" = fit_intercept,
+                         "Kw" = Kw)
   class(TSVMClassifier) <- "TSVMClassifier"
   return(TSVMClassifier)
 }
@@ -113,12 +114,34 @@ predict.TSVMClassifier <- function(object, X, values = FALSE, ...) {
                                degree = object$degree,
                                coef0 = object$coef0)
   }
-  if (object$fit_intercept == TRUE) {
-    KernelX <- cbind(KernelX, 1)
-  }
   xp <- ncol(KernelX)
-  fx1 <- abs(KernelX %*% object$coef1)/norm(object$coef1[1:(xp - 1)], type = "2")
-  fx2 <- abs(KernelX %*% object$coef2)/norm(object$coef1[1:(xp - 1)], type = "2")
+  if (object$fit_intercept == TRUE) {
+    KernelXe <- cbind(KernelX, 1)
+  }
+  f1 <- abs(KernelXe %*% object$coef1)
+  f2 <- abs(KernelXe %*% object$coef2)
+  if (object$kernel == "linear") {
+    norm1 <- norm(object$coef1[1:xp], type = "2")
+    norm2 <- norm(object$coef2[1:xp], type = "2")
+  } else {
+    norm1 <- t(object$coef1[1:xp]) %*% object$Kw %*% object$coef1[1:xp]
+    norm2 <- t(object$coef2[1:xp]) %*% object$Kw %*% object$coef2[1:xp]
+    norm1 <- as.numeric(norm1)
+    norm2 <- as.numeric(norm2)
+  }
+  if (norm1 == 0 || norm2 == 0) {
+    norm1 <- norm1 + 1e-7
+    norm2 <- norm2 + 1e-7
+  }
+  fx1 <- f1 / norm1
+  fx2 <- f2 / norm2
+  if (values == FALSE) {
+    decf <- apply(cbind(fx1, fx2), 1, which.min)
+    idx_pos <- which(decf == 1)
+    idx_neg <- which(decf == 2)
+    decf[idx_pos] <- object$class_set[1]
+    decf[idx_neg] <- object$class_set[2]
+  }
   if (values == FALSE) {
     decf <- apply(cbind(fx1, fx2), 1, which.min)
     idx_pos <- which(decf == 1)
@@ -152,7 +175,7 @@ plot.TSVMClassifier <- function(x, ...) {
   y[-idx] <- 1
   xlim_c <- c(min(x$X[,1]), max(x$X[, 1]))
   ylim_c <- c(min(x$X[,2]), max(x$X[, 2]))
-  if (ncol(x$X) == 3) {
+  if (length(coef1) ==3 && length(coef2) == 3) {
     plot(x$X[idx, 1], x$X[idx, 2], col = "red", xlim = xlim_c, ylim = ylim_c,
          xlab = "", ylab = "")
     grid(10, 10, lwd = 2,col = "grey")
