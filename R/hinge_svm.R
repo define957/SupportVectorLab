@@ -194,8 +194,6 @@ predict.SVMClassifier <- function(object, X, values = FALSE, ...) {
 }
 
 calculate_svm_H <- function(KernelX, y) {
-  # D <- Matrix::Matrix(diag(as.numeric(y)))
-  # H <- D %*% KernelX %*% D
   H <- (y%*%t(y))*KernelX
   return(H)
 }
