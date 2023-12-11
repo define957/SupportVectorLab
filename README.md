@@ -41,6 +41,7 @@ Then you can have `SupportVectorLab` package on your PC。
 + Least Squares Loss Support Vector Classification
 + Rescaled Quantile Loss Support Vector Classification
 + Bounded Quantile Loss Support Vector Classification
++ Asymmetric Least Squares Loss Support Vector Classification
 
 ## SVMs for regression
 + Epsilon Insensitive Loss Support Vector Regression
@@ -81,3 +82,18 @@ We welcome all suggestions and will improve them in the future!
 ## Licenses
 
 GNU GENERAL PUBLIC LICENSE Version 3 (GPL-3.0)
+
+# Citing Support Vector Laboratory
+```
+@article{ZHANG2024122759,
+title = {Bounded quantile loss for robust support vector machines-based classification and regression},
+journal = {Expert Systems with Applications},
+volume = {242},
+pages = {122759},
+year = {2024},
+issn = {0957-4174},
+doi = {https://doi.org/10.1016/j.eswa.2023.122759},
+url = {https://www.sciencedirect.com/science/article/pii/S095741742303261X},
+author = {Jiaqi Zhang and Hu Yang},
+}
+```
