@@ -56,11 +56,13 @@ kernel_function <- function(x1, x2,
 kernel_select_option <- function(X, kernel, solver, randx,
                                  gamma, degree, coef0, ...) {
   n <- nrow(X)
+  sample_idx <- 1:n
   if (kernel == "linear" & solver == "primal") {
     KernelX <- X
   } else if (kernel != "linear" & solver == "primal") {
     if (randx > 0 && randx < 1) {
-      randX <- X[sample(n, floor(randx*n)),]
+      sample_idx <- sample(n, floor(randx*n))
+      randX <- X[sample_idx,]
     } else {
       randX <- X
     }
@@ -74,6 +76,6 @@ kernel_select_option <- function(X, kernel, solver, randx,
                                gamma = gamma, degree = degree, coef0 = coef0,
                                symmetric = T)
   }
-  K <- list("X" = X, "KernelX" = KernelX)
+  K <- list("X" = X, "KernelX" = KernelX, "sample_idx" = sample_idx)
   return(K)
 }
