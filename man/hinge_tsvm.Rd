@@ -8,7 +8,7 @@ hinge_tsvm(
   X,
   y,
   C1 = 1,
-  C2 = 2,
+  C2 = C1,
   kernel = c("linear", "rbf", "poly"),
   gamma = 1/ncol(X),
   degree = 3,
