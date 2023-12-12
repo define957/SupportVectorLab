@@ -182,11 +182,11 @@ plot.TSVMClassifier <- function(x, ...) {
     points(x$X[-idx, 1], x$X[-idx, 2], col = "blue")
     if (x$kernel == "linear") {
       abline(a = -coef1[3]/coef1[2], b = -coef1[1]/coef1[2],
-             lty = 2, col = "red")
+             lty = 1, col = "red")
       abline(a = -(coef1[3]+1)/coef1[2], b = -coef1[1]/coef1[2],
              lty = 2, col = "red")
       abline(a = -coef2[3]/coef2[2], b = -coef2[1]/coef2[2],
-             lty = 2, col = "blue")
+             lty = 1, col = "blue")
       abline(a = -(coef2[3]-1)/coef2[2], b = -coef2[1]/coef2[2],
              lty = 2, col = "blue")
     }
