@@ -5,7 +5,13 @@ pin_svm_dual_solver <- function(KernelX, y, C = 1, tau = 0.5,
   e <- matrix(1, nrow = n)
   lb <- matrix(-tau*C, nrow = n)
   ub <- matrix(C, nrow = n)
-  u <- clip_dcd_optimizer(H, e, lb, ub, eps, max.steps, (lb + ub)/2)$x
+
+  if (tau == 0) {
+    u0 <- matrix(0, n)
+  } else {
+    u0 <- (lb + ub)/2
+  }
+  u <- clip_dcd_optimizer(H, e, lb, ub, eps, max.steps, u0)$x
   coef <- y*u
   BaseDualPinSVMClassifier <- list(coef = as.matrix(coef))
   class(BaseDualPinSVMClassifier) <- "BaseDualPinSVMClassifier"
