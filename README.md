@@ -42,11 +42,18 @@ Then you can have `SupportVectorLab` package on your PC。
 + Rescaled Quantile Loss Support Vector Classification
 + Bounded Quantile Loss Support Vector Classification
 + Asymmetric Least Squares Loss Support Vector Classification
++ Square Hinge Loss Support Vector Classification
 
 ## SVMs for regression
 + Epsilon Insensitive Loss Support Vector Regression
 + Least Squares Loss Support Vector Regression
 + Bounded Quantile Loss Support Vector Regression
+
+## Twin support vector machines for classification
++ Hinge Loss Twin Support Vector classification
++ Least Squares Twin Support Vector classification
+## Twin support vector machines for classification
++ Hinge Twin Support Vector Regression
 
 ## Kernel options
 
