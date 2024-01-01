@@ -8,13 +8,15 @@ bq_svm_dual_solver <- function(KernelX, y, C = 1, update_deltak,
   if (tau == 0) {
     u0 <- matrix(0, n, 1)
   } else {
-    u0 <- matrix((1 - tau)*lambda*C, n, 1)
+    u0 <- matrix((1 - tau)*lambda*C/2, nrow = n, ncol = 1)
   }
   for (i in 1:cccp.steps) {
     f <- 1 - H %*% u0
     delta_k <- update_deltak(f, u0, lambda, tau)
     lb <- -C*delta_k - lambda*tau*C
     ub <- -C*delta_k + lambda*C
+    u0[u0 > ub] <- ub[u0 > ub]
+    u0[u0 < lb] <- lb[u0 < lb]
     u <- clip_dcd_optimizer(H, e, lb, ub, eps, max.steps, u0)$x
     if (norm(u - u0, type = "2") < eps.cccp) {
       break
@@ -45,7 +47,7 @@ bq_svm_primal_solver <- function(KernelX, y, C = 1, update_deltak,
     u[f < 0] <- -tau
     u[f >= 0] <- 1
     sg <- w - lambda*(C*xn/xmn) * t(KernelX) %*% (u*y) +
-         (C*xn/xmn)*t(KernelX) %*% (y*deltak[At, ])
+      (C*xn/xmn)*t(KernelX) %*% (y*deltak[At, ])
     return(sg)
   }
   xn <- ncol(KernelX)

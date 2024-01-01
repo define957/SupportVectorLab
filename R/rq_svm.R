@@ -9,13 +9,15 @@ rq_svm_dual_solver <- function(KernelX, y, C = 1, update_deltak,
   if (tau == 0) {
     u0 <- matrix(0, nrow = n, ncol = 1)
   } else {
-    u0 <- matrix((1 - tau)*lambda*C, nrow = n, ncol = 1)
+    u0 <- matrix((1 - tau)*lambda*C/2, nrow = n, ncol = 1)
   }
   for (i in 1:cccp.steps) {
     f <- 1 - H %*% u0
     delta_k <- update_deltak(f, u0, tau, lambda)
     lb <- -C*delta_k - C*eta*tau/lambda
     ub <- -C*delta_k + C*eta/lambda
+    u0[u0 > ub] <- ub[u0 > ub]
+    u0[u0 < lb] <- lb[u0 < lb]
     u <- clip_dcd_optimizer(H, e, lb, ub, eps, max.steps, u0)$x
     if (norm(u - u0, type = "2") < eps.cccp) {
       break
@@ -48,7 +50,7 @@ rq_svm_primal_solver <- function(KernelX, y, C = 1, update_deltak,
     u[f < 0] <- -tau
     u[f >= 0] <- 1
     sg <- w - eta*(C*xn/xmn) * t(KernelX) %*% (u*y)/lambda +
-          (C*xn/xmn)*t(KernelX) %*% (y*deltak[At, ])
+      (C*xn/xmn)*t(KernelX) %*% (y*deltak[At, ])
     return(sg)
   }
   xn <- nrow(KernelX)
@@ -143,8 +145,8 @@ rq_svm <- function(X, y, C = 1, kernel = c("linear", "rbf", "poly"),
                                        optimizer, ...)
   } else if (solver == "dual") {
     solver.res <- rq_svm_dual_solver(KernelX, y, C, update_deltak,
-                                          tau, lambda, eps, eps.cccp,
-                                          max.steps, cccp.steps)
+                                     tau, lambda, eps, eps.cccp,
+                                     max.steps, cccp.steps)
   }
   SVMClassifier <- list("X" = X, "y" = y, "class_set" = class_set,
                         "C" = C, "kernel" = kernel,
