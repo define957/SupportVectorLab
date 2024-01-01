@@ -12,7 +12,7 @@ bq_svm(
   gamma = 1/ncol(X),
   degree = 3,
   coef0 = 0,
-  tau = 0,
+  tau = 1,
   lambda = 1,
   eps = 1e-05,
   eps.cccp = 0.01,
@@ -44,7 +44,7 @@ bq_svm(
 
 \item{coef0}{parameter for polynomial kernel,  default: \code{coef0 = 0}.}
 
-\item{tau}{parameter for bq loss (tau-insensitive zone).}
+\item{tau}{parameter for bq loss.}
 
 \item{lambda}{parameter for bq loss (loss increase speed).}
 

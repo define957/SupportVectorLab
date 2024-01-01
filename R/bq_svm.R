@@ -1,7 +1,7 @@
 bq_svm_dual_solver <- function(KernelX, y, C = 1, update_deltak,
-                               lambda = 1, tau = 0,
+                               lambda = 1, tau = 1,
                                eps = 1e-5, eps.cccp = 1e-2,
-                               max.steps = 80, cccp.steps = 10) {
+                               max.steps = 4000, cccp.steps = 10) {
   n <- nrow(KernelX)
   H <- calculate_svm_H(KernelX, y)
   e <- matrix(1, n, 1)
@@ -84,7 +84,7 @@ bq_svm_primal_solver <- function(KernelX, y, C = 1, update_deltak,
 #'     \item{poly:}{\eqn{(\gamma u'v + coef0)^{degree}}{(gamma*u'*v + coef0)^degree}}
 #'     \item{rbf:}{\eqn{e^{(-\gamma |u-v|^2)}}{exp(-gamma*|u-v|^2)}}
 #' }
-#' @param tau parameter for bq loss (tau-insensitive zone).
+#' @param tau parameter for bq loss.
 #' @param lambda parameter for bq loss (loss increase speed).
 #' @param gamma parameter for \code{'rbf'} and \code{'poly'} kernel. Default \code{gamma = 1/ncol(X)}.
 #' @param degree parameter for polynomial kernel, default: \code{degree = 3}.
@@ -104,7 +104,7 @@ bq_svm_primal_solver <- function(KernelX, y, C = 1, update_deltak,
 #' @export
 bq_svm <- function(X, y, C = 1, kernel = c("linear", "rbf", "poly"),
                    gamma = 1 / ncol(X), degree = 3, coef0 = 0,
-                   tau = 0, lambda = 1,
+                   tau = 1, lambda = 1,
                    eps = 1e-5, eps.cccp = 1e-2, max.steps = 4000, cccp.steps = 10,
                    batch_size = nrow(X) / 10,
                    solver = c("dual", "primal"),
@@ -112,7 +112,7 @@ bq_svm <- function(X, y, C = 1, kernel = c("linear", "rbf", "poly"),
 
   X <- as.matrix(X)
   y <- as.matrix(y)
-  class_set <- unique(y)
+  class_set <- sort(unique(y))
   idx <- which(y == class_set[1])
   y[idx] <- 1
   y[-idx] <- -1
@@ -153,6 +153,3 @@ bq_svm <- function(X, y, C = 1, kernel = c("linear", "rbf", "poly"),
   class(SVMClassifier) <- "SVMClassifier"
   return(SVMClassifier)
 }
-
-
-
