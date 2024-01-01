@@ -53,7 +53,7 @@ the function will evaluates intercept.}
 \item{...}{unused parameters.}
 }
 \value{
-return \code{HingeSVMClassifier} object.
+return \code{TSVMClassifier} object.
 }
 \description{
 \code{hinge_tsvm} is an R implementation of Hinge-TSVM

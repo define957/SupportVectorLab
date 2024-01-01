@@ -51,7 +51,7 @@ hinge_tsvm_dual_solver <- function(KernelX, idx, C1, C2, eps, max.steps) {
 #'                      the function will evaluates intercept.
 #' @param randx parameter for reduce SVM, default \code{randx = 0.1}.
 #' @param ... unused parameters.
-#' @return return \code{HingeSVMClassifier} object.
+#' @return return \code{TSVMClassifier} object.
 #' @export
 hinge_tsvm <- function(X, y, C1 = 1, C2 = C1,
                        kernel = c("linear", "rbf", "poly"),
