@@ -24,7 +24,7 @@ bq_svm_dual_solver <- function(KernelX, y, C = 1, update_deltak,
       u0 <- u
     }
   }
-  coef <- y*u0
+  coef <- y*u
   BaseDualbqSVMClassifier <- list(coef = as.matrix(coef))
   class(BaseDualbqSVMClassifier) <- "BaseDualbqSVMClassifier"
   return(BaseDualbqSVMClassifier)
