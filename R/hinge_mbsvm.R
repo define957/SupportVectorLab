@@ -66,6 +66,7 @@ hinge_mbsvm <- function(X, y, C = 1,
   kso <- kernel_select_option(X, kernel, "primal", randx,
                               gamma, degree, coef0)
   KernelX <- kso$KernelX
+  Kw <- kso$KernelX[kso$sample_idx, ]
   X <- kso$X
   if (fit_intercept == TRUE) {
     KernelX <- cbind(KernelX, 1)
@@ -79,7 +80,8 @@ hinge_mbsvm <- function(X, y, C = 1,
                          "C" = C, "kernel" = kernel,
                          "gamma" = gamma, "degree" = degree, "coef0" = coef0,
                          "solver" = solver, "coef" = solver.res$coef,
-                         "fit_intercept" = fit_intercept)
+                         "fit_intercept" = fit_intercept,
+                         "Kw" = Kw)
   class(MBSVMClassifier) <- "MBSVMClassifier"
   return(MBSVMClassifier)
 }
@@ -105,30 +107,25 @@ predict.MBSVMClassifier <- function(object, X, values = FALSE, ...) {
                                degree = object$degree,
                                coef0 = object$coef0,
                                symmetric = FALSE)
-    K <- kernel_function(object$X, object$X,
-                         kernel.type = object$kernel,
-                         gamma = object$gamma,
-                         degree = object$degree,
-                         coef0 = object$coef0,
-                         symmetric = TRUE)
   }
+  xp <- ncol(KernelX)
   if (object$fit_intercept == TRUE) {
     KernelX <- cbind(KernelX, 1)
   }
   fx <- KernelX %*% object$coef
-  xp <- ncol(KernelX)
   if (object$kernel == "linear") {
-    coef_norm <- apply(object$coef[1:(xp-1), ], 2, norm, type = "2")
+    coef_norm <- apply(object$coef[1:xp, ], 2, norm, type = "2")
   } else {
     num_class <- ncol(object$coef)
     coef_norm <- matrix(0, 1, num_class)
-    vK <- t(object$coef[1:(xp-1), ]) %*% K
+    vK <- t(object$coef[1:xp, ]) %*% object$Kw
     for (i in 1:num_class) {
-      coef_norm[i] <-  vK[i, ] %*% object$coef[1:(xp-1), i]
+      coef_norm[i] <-  vK[i, ] %*% object$coef[1:xp, i]
     }
     coef_norm <- as.numeric(coef_norm)
   }
-  decf_values <- abs(fx) / (coef_norm + 1e-7)
+  coef_norm[coef_norm == 0] <- 1e-7
+  decf_values <- abs(fx) / coef_norm
   if (values == FALSE) {
     class_idx <- apply(decf_values, 1, which.max)
     decf <- object$class_set[class_idx]
