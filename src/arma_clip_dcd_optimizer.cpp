@@ -16,9 +16,11 @@ Rcpp::List cpp_clip_dcd_optimizer(arma::mat H, arma::mat q,
   unsigned int i = 0;
   unsigned int j = 0;
   unsigned int max_idx = 0;
+  unsigned int max_idx_temp = 0;
   double L_val_max;
-  double lambda_max;
+  // double lambda_max;
   double lambda_opt = 0;
+  double lambda_opt_temp = 0;
   arma::mat numerator(n, 1);
   arma::vec L_idx_val(n);
   arma::vec L_val(n);
@@ -30,6 +32,7 @@ Rcpp::List cpp_clip_dcd_optimizer(arma::mat H, arma::mat q,
   arma::uvec unique_idx;
   arma::mat diagH = H.diag();
   arma::mat ut = u.t();
+  arma::vec lambda_max_list;
   for (i = 0; i < n; i++) {
     Hui(i, span::all) = H.row(i) % ut;
   }
@@ -46,13 +49,17 @@ Rcpp::List cpp_clip_dcd_optimizer(arma::mat H, arma::mat q,
       break;
     }
     idx = find(L_val == L_val_max);
+    lambda_max_list = L_idx_val(idx);
+    lambda_opt = 0;
+    max_idx = 0;
     for (j = 0; j < idx.n_elem; j++) {
-      max_idx = as_scalar(idx(j));
-      lambda_max = as_scalar(L_idx_val(max_idx));
-      lambda_opt = max(as_scalar(lb(max_idx) - u(max_idx)),
-                       min(lambda_max, as_scalar(ub(max_idx) - u(max_idx))));
-      if (lambda_opt != 0) {
-        break;
+      max_idx_temp = as_scalar(idx(j));
+      lambda_opt_temp = max(as_scalar(lb(max_idx_temp) - u(max_idx_temp)),
+                        min(lambda_max_list(j),
+                            as_scalar(ub(max_idx_temp) - u(max_idx_temp))));
+      if (abs(lambda_opt) < abs(lambda_opt_temp)) {
+        max_idx = max_idx_temp;
+        lambda_opt = lambda_opt_temp;
       }
     }
     u(max_idx) = u(max_idx) + lambda_opt;
