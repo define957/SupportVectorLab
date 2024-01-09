@@ -1,5 +1,5 @@
 als_svm_dual_solver <- function(KernelX, y, C = 1, p = 0.5,
-                                eps = 1e-14, max.steps = 4000) {
+                                eps = 1e-5, max.steps = 4000) {
   n <- nrow(KernelX)
   H <- calculate_svm_H(KernelX, y)
   H <- cbind(H, -H)
@@ -34,12 +34,12 @@ als_svm_primal_solver <- function(KernelX, y, C = 1, p = 0.5,
     sg <- matrix(0, xmp, 1)
     u <- 1 - y * (KernelX %*% w)
     idx <- which(u >= 0)
-    u[idx] <- p*u[idx]
-    u[-idx] <- (1 - p)*u[-idx]
+    u[idx] <- p^2
+    u[-idx] <- (1 - p)^2
     sg <- w - (C*xn/xmn) * t(KernelX) %*% (u*y)
     return(sg)
   }
-  xn <- ncol(KernelX)
+  xn <- nrow(KernelX)
   xp <- ncol(KernelX)
   w0 <- matrix(0, nrow = xp, ncol = 1)
   pars <- list("C" = C, "xn" = xn)
@@ -48,7 +48,6 @@ als_svm_primal_solver <- function(KernelX, y, C = 1, p = 0.5,
   class(BasePrimalALSSVMClassifier) <- "BasePrimalALSSVMClassifier"
   return(BasePrimalALSSVMClassifier)
 }
-
 
 
 #' Asymmetric Least Squares Support Vector Machine
@@ -77,14 +76,12 @@ als_svm_primal_solver <- function(KernelX, y, C = 1, p = 0.5,
 #' @param optimizer default primal optimizer pegasos.
 #' @param randx parameter for reduce SVM, default \code{randx = 0.1}.
 #' @param ... unused parameters.
-#' @return return \code{HingeSVMClassifier} object.
-#' @import Rcpp
-#' @useDynLib SupportVectorLab, .registration=TRUE
+#' @return return \code{SVMClassifier} object.
 #' @export
 als_svm <- function(X, y, C = 1, kernel = c("linear", "rbf", "poly"),
                     gamma = 1 / ncol(X), degree = 3, coef0 = 0,
                     p = 0.5,
-                    eps = 1e-14, max.steps = 4000, batch_size = nrow(X) / 10,
+                    eps = 1e-5, max.steps = 4000, batch_size = nrow(X) / 10,
                     solver = c("dual", "primal"),
                     fit_intercept = TRUE, optimizer = pegasos, randx = 0.1, ...) {
   X <- as.matrix(X)
