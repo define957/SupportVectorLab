@@ -2,7 +2,7 @@
 % Please edit documentation in R/hinge_mbsvm.R
 \name{hinge_mbsvm}
 \alias{hinge_mbsvm}
-\title{Multiple Birth Hinge Support Vector Machine}
+\title{Hinge Multiple Birth  Support Vector Machine}
 \usage{
 hinge_mbsvm(
   X,
@@ -13,10 +13,10 @@ hinge_mbsvm(
   degree = 3,
   coef0 = 0,
   eps = 1e-05,
-  max.steps = 5000,
+  max.steps = 4000,
   solver = c("dual"),
   fit_intercept = TRUE,
-  randx = 0.1,
+  randx = 1,
   ...
 )
 }

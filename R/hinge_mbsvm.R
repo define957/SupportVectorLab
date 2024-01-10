@@ -23,7 +23,7 @@ hinge_mbsvm_dual_solver <- function(KernelX, y, C, class_set, class_num,
   return(BaseDualHingeMBSVMClassifier)
 }
 
-#' Multiple Birth Hinge Support Vector Machine
+#' Hinge Multiple Birth  Support Vector Machine
 #'
 #' \code{hinge_mbsvm} is an R implementation of Hinge-MBSVM
 #'
@@ -51,9 +51,9 @@ hinge_mbsvm_dual_solver <- function(KernelX, y, C, class_set, class_num,
 hinge_mbsvm <- function(X, y, C = 1,
                         kernel = c("linear", "rbf", "poly"),
                         gamma = 1 / ncol(X), degree = 3, coef0 = 0,
-                        eps = 1e-5, max.steps = 5000,
+                        eps = 1e-5, max.steps = 4000,
                         solver = c("dual"), fit_intercept = TRUE,
-                        randx = 0.1, ...) {
+                        randx = 1, ...) {
   X <- as.matrix(X)
   y <- as.matrix(y)
   class_set <- sort(unique(y))
@@ -72,16 +72,16 @@ hinge_mbsvm <- function(X, y, C = 1,
     KernelX <- cbind(KernelX, 1)
   }
   if (solver == "dual") {
-  solver.res <- hinge_mbsvm_dual_solver(KernelX, y, C,
-                                        class_set, class_num, eps, max.steps)
+    solver.res <- hinge_mbsvm_dual_solver(KernelX, y, C,
+                                          class_set, class_num, eps, max.steps)
   }
   MBSVMClassifier <- list("X" = X, "y" = y, "class_set" = class_set,
                           "class_num" = class_num,
-                         "C" = C, "kernel" = kernel,
-                         "gamma" = gamma, "degree" = degree, "coef0" = coef0,
-                         "solver" = solver, "coef" = solver.res$coef,
-                         "fit_intercept" = fit_intercept,
-                         "Kw" = Kw)
+                          "C" = C, "kernel" = kernel,
+                          "gamma" = gamma, "degree" = degree, "coef0" = coef0,
+                          "solver" = solver, "coef" = solver.res$coef,
+                          "fit_intercept" = fit_intercept,
+                          "Kw" = Kw)
   class(MBSVMClassifier) <- "MBSVMClassifier"
   return(MBSVMClassifier)
 }
