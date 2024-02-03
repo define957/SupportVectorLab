@@ -1,8 +1,6 @@
 ls_mbsvm_dual_solver <- function(KernelX, y, C, class_set, class_num) {
   coefk <- matrix(0, ncol(KernelX), class_num)
-  xn <- nrow(KernelX)
   xp <- ncol(KernelX)
-  print(xp)
   Ie <- diag(1e-7, xp)
   for (i in 1:class_num) {
     class_idx <- which(y == class_set[i])
