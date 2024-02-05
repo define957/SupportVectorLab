@@ -1,5 +1,6 @@
 ls_mbsvm_dual_solver <- function(KernelX, y, C, class_set, class_num) {
   coefk <- matrix(0, ncol(KernelX), class_num)
+  xn <- nrow(KernelX)
   xp <- ncol(KernelX)
   Ie <- diag(1e-7, xp)
   for (i in 1:class_num) {
@@ -7,6 +8,8 @@ ls_mbsvm_dual_solver <- function(KernelX, y, C, class_set, class_num) {
     Hk <- KernelX[-class_idx, ]
     Gk <- KernelX[class_idx, ]
     nGk <- length(class_idx)
+    dim(Hk) <- c(xn - nGk, xp)
+    dim(Gk) <- c(nGk, xp)
     GramHK <- t(Hk) %*% Hk
     GramGK <- t(Gk) %*% Gk
     ek <- matrix(1, nGk)
