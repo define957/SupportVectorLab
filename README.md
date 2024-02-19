@@ -48,12 +48,21 @@ Then you can have `SupportVectorLab` package on your PC。
 + Epsilon Insensitive Loss Support Vector Regression
 + Least Squares Loss Support Vector Regression
 + Bounded Quantile Loss Support Vector Regression
++ Asymmetric Least Squares Support Vector Regression
 
-## Twin support vector machines for classification
-+ Hinge Loss Twin Support Vector classification
-+ Least Squares Twin Support Vector classification
-## Twin support vector machines for classification
-+ Hinge Twin Support Vector Regression
+## Twin support vector machines for classification (TSVM)
++ Hinge-TSVM
++ LS-TSVM
+
+## Twin support vector machines for regression (TSVR)
++ Hinge-TSVR
+
+## Multiple birth support vector machine (MBSVM)
++ Hinge-MBSVM
++ Pin-MBSVM
++ Ramp-MBSVM
++ LS-MBSVM
+
 
 ## Kernel options
 
