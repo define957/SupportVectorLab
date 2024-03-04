@@ -1,6 +1,5 @@
 #include <RcppArmadillo.h>
 #include <Rcpp.h>
-
 using namespace arma;
 using namespace Rcpp;
 using namespace std;
@@ -12,13 +11,11 @@ Rcpp::List cpp_clip_dcd_optimizer(arma::mat H, arma::mat q,
                                   double eps, unsigned int max_steps,
                                   arma::mat u){
   unsigned int n = H.n_rows;
-
   unsigned int i = 0;
   unsigned int j = 0;
   unsigned int max_idx = 0;
   unsigned int max_idx_temp = 0;
   double L_val_max;
-  // double lambda_max;
   double lambda_opt = 0;
   double lambda_opt_temp = 0;
   arma::mat numerator(n, 1);
@@ -26,6 +23,10 @@ Rcpp::List cpp_clip_dcd_optimizer(arma::mat H, arma::mat q,
   arma::vec L_val(n);
   arma::mat Hu(n, n);
   Hu = H * u;
+  arma::vec ub_u(n);
+  ub_u = ub - u;
+  arma::vec lb_u(n);
+  lb_u = lb - u;
   arma::vec Huik(n);
   arma::mat Hui(n, n);
   arma::uvec idx;
@@ -33,6 +34,8 @@ Rcpp::List cpp_clip_dcd_optimizer(arma::mat H, arma::mat q,
   arma::mat diagH = H.diag();
   arma::mat ut = u.t();
   arma::vec lambda_max_list;
+  arma::vec u_old(1);
+  arma::vec u_new(1);
   for (i = 0; i < n; i++) {
     Hui(i, span::all) = H.row(i) % ut;
   }
@@ -54,18 +57,22 @@ Rcpp::List cpp_clip_dcd_optimizer(arma::mat H, arma::mat q,
     max_idx = 0;
     for (j = 0; j < idx.n_elem; j++) {
       max_idx_temp = as_scalar(idx(j));
-      lambda_opt_temp = max(as_scalar(lb(max_idx_temp) - u(max_idx_temp)),
-                        min(lambda_max_list(j),
-                            as_scalar(ub(max_idx_temp) - u(max_idx_temp))));
+      lambda_opt_temp = max(as_scalar(lb_u(max_idx_temp)),
+                            min(lambda_max_list(j),
+                                as_scalar(ub_u(max_idx_temp))));
       if (abs(lambda_opt) < abs(lambda_opt_temp)) {
         max_idx = max_idx_temp;
         lambda_opt = lambda_opt_temp;
       }
     }
-    u(max_idx) = u(max_idx) + lambda_opt;
+    u_old = u(max_idx);
+    u_new = u(max_idx) + lambda_opt;
+    u(max_idx) = u_new(0);
     Huik = H.col(max_idx)*u(max_idx);
     Hu = Hu - Hui.col(max_idx) + Huik;
     Hui(span::all, max_idx) = Huik;
+    ub_u(max_idx) = ub(max_idx) - u_new(0);
+    lb_u(max_idx) = lb(max_idx) - u_new(0);
   }
   double obj_val = as_scalar(0.5 * u.t() * H * u - q.t() * u);
 
