@@ -17,6 +17,7 @@ hinge_tksvc_dual_solver <- function(KernelX, y, C1, C2, C3, C4, epsilon,
       G <- KernelX[idxNeg, ]
       M <- KernelX[idxRest, ]
       N <- rbind(G, M)
+      P <- rbind(H, M)
 
       Hn <- nrow(H)
       Gn <- nrow(G)
@@ -33,12 +34,11 @@ hinge_tksvc_dual_solver <- function(KernelX, y, C1, C2, C3, C4, epsilon,
       coef1 <- -invHTH %*% t(N) %*% x
 
       # Hyperplane 2
-      P <- rbind(H, M)
       invGTG <- chol2inv(chol(t(G) %*% G + diag(1e-7, xp)))
       dualH <- P %*% invGTG %*% t(P)
       dualq <- rbind(matrix(1, Hn), matrix(1 - epsilon, Mn))
-      dualub <- rbind(matrix(C3, Hn), matrix(C4, Mn))
       duallb <- matrix(0, Hn + Mn)
+      dualub <- rbind(matrix(C3, Hn), matrix(C4, Mn))
       u0 <- matrix(0, Hn + Mn)
       x <- clip_dcd_optimizer(dualH, dualq, duallb, dualub,
                               eps, max.steps, u0)$x
