@@ -11,9 +11,8 @@ rq_svm_dual_solver <- function(KernelX, y, C = 1, update_deltak,
   } else {
     u0 <- matrix((1 - tau)*lambda*C/2, nrow = n, ncol = 1)
   }
+  delta_k <- matrix(0, n)
   for (i in 1:cccp.steps) {
-    f <- 1 - H %*% u0
-    delta_k <- update_deltak(f, u0, tau, lambda)
     lb <- -C*delta_k - C*eta*tau/lambda
     ub <- -C*delta_k + C*eta/lambda
     u0[u0 > ub] <- ub[u0 > ub]
@@ -24,6 +23,8 @@ rq_svm_dual_solver <- function(KernelX, y, C = 1, update_deltak,
     } else {
       u0 <- u
     }
+    f <- 1 - H %*% u0
+    delta_k <- update_deltak(f, u0, tau, lambda)
   }
   coef <- y*u
   BaseDualRQSVMClassifier <- list(coef = as.matrix(coef))
