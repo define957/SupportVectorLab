@@ -14,11 +14,10 @@ hinge_tksvc(
   coef0 = 0,
   epsilon = 0.1,
   eps = 1e-05,
-  max.steps = 5000,
+  max.steps = 4000,
   solver = c("dual"),
   fit_intercept = TRUE,
-  randx = 0.1,
-  ...
+  randx = 1
 )
 }
 \arguments{
@@ -51,8 +50,6 @@ hinge_tksvc(
 the function will evaluates intercept.}
 
 \item{randx}{parameter for reduce SVM, default \code{randx = 0.1}.}
-
-\item{...}{unused parameters.}
 }
 \value{
 return \code{HingeSVMClassifier} object.
