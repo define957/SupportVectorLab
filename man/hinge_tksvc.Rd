@@ -7,7 +7,10 @@
 hinge_tksvc(
   X,
   y,
-  C = 1,
+  C1 = 1,
+  C2 = 1,
+  C3 = C1,
+  C4 = C2,
   kernel = c("linear", "rbf", "poly"),
   gamma = 1/ncol(X),
   degree = 3,
@@ -23,7 +26,7 @@ hinge_tksvc(
 \arguments{
 \item{X, y}{dataset and label.}
 
-\item{C}{plenty term.}
+\item{C1, C2, C3, C4}{plenty term.}
 
 \item{kernel}{kernel function. The definitions of various kernel functions are as follows:
 \describe{
