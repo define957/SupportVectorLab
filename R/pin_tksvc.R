@@ -1,5 +1,7 @@
-hinge_tksvc_dual_solver <- function(KernelX, y, C1, C2, C3, C4, epsilon,
-                                    class_set, class_num, eps, max.steps) {
+pin_tksvc_dual_solver <- function(KernelX, y, C1, C2, C3, C4, epsilon,
+                                  tau1, tau2, tau3, tau4,
+                                  class_set, class_num,
+                                  eps, max.steps) {
   xp <- ncol(KernelX)
   num_classifier <- class_num*(class_num - 1)/2
   coef_pos <- matrix(0, xp, num_classifier)
@@ -26,22 +28,41 @@ hinge_tksvc_dual_solver <- function(KernelX, y, C1, C2, C3, C4, epsilon,
       invHTH <- chol2inv(chol(t(H) %*% H + diag(1e-7, xp)))
       dualH <- N %*% invHTH %*% t(N)
       dualq <- rbind(matrix(1, Gn), matrix(1 - epsilon, Mn))
-      duallb <- matrix(0, Gn + Mn)
+      duallb <- rbind(matrix(-tau1*C1, Gn), matrix(-tau2*C2, Mn))
       dualub <- rbind(matrix(C1, Gn), matrix(C2, Mn))
-      u0 <- matrix(0, Gn + Mn)
-      x <- clip_dcd_optimizer(dualH, dualq, duallb, dualub,
-                              eps, max.steps, u0)$x
+      if (tau1 == 0) {
+        u0_1 <- matrix(0, Gn)
+      } else {
+        u0_1 <- matrix((1 - tau1)*C1 / 2, Gn)
+      }
+      if (tau2 == 0) {
+        u0_2 <- matrix(0, Mn)
+      } else {
+        u0_2 <- matrix((1 - tau2*C2) / 2, Mn)
+      }
+      u0 <- rbind(u0_1, u0_2)
+      x <- clip_dcd_optimizer(dualH, dualq, duallb, dualub, eps, max.steps, u0)$x
       coef1 <- -invHTH %*% t(N) %*% x
 
       # Hyperplane 2
+      P <- rbind(H, M)
       invGTG <- chol2inv(chol(t(G) %*% G + diag(1e-7, xp)))
       dualH <- P %*% invGTG %*% t(P)
       dualq <- rbind(matrix(1, Hn), matrix(1 - epsilon, Mn))
-      duallb <- matrix(0, Hn + Mn)
       dualub <- rbind(matrix(C3, Hn), matrix(C4, Mn))
-      u0 <- matrix(0, Hn + Mn)
-      x <- clip_dcd_optimizer(dualH, dualq, duallb, dualub,
-                              eps, max.steps, u0)$x
+      duallb <- rbind(matrix(-tau3*C3, Hn), matrix(-tau4*C4, Mn))
+      if (tau3 == 0) {
+        u0_1 <- matrix(0, Hn)
+      } else {
+        u0_1 <- matrix((1 - tau3)*C3 / 2, Hn)
+      }
+      if (tau4 == 0) {
+        u0_2 <- matrix(0, Mn)
+      } else {
+        u0_2 <- matrix((1 - tau4)*C4 / 2, Mn)
+      }
+      u0 <- rbind(u0_1, u0_2)
+      x <- clip_dcd_optimizer(dualH, dualq, duallb, dualub, eps, max.steps, u0)$x
       coef2 <- invGTG %*% t(P) %*% x
 
       coef_pos[, classifier_idx] <- coef1
@@ -49,9 +70,9 @@ hinge_tksvc_dual_solver <- function(KernelX, y, C1, C2, C3, C4, epsilon,
       classifier_idx <- classifier_idx + 1
     }
   }
-  BaseDualHingeTKSVCClassifier <- list("coef_pos" = coef_pos,
-                                       "coef_neg" = coef_neg)
-  return(BaseDualHingeTKSVCClassifier)
+  BaseDualPinTKSVCClassifier <- list("coef_pos" = coef_pos,
+                                     "coef_neg" = coef_neg)
+  return(BaseDualPinTKSVCClassifier)
 }
 
 #' Hinge Twin Multi-Class Support Vector Machine
@@ -71,6 +92,7 @@ hinge_tksvc_dual_solver <- function(KernelX, y, C1, C2, C3, C4, epsilon,
 #' @param degree parameter for polynomial kernel, default: \code{degree = 3}.
 #' @param coef0 parameter for polynomial kernel,  default: \code{coef0 = 0}.
 #' @param epsilon rest class parameter.
+#' @param tau1,tau2,tau3,tau4 parameter for pinball loss function.
 #' @param eps the precision of the optimization algorithm.
 #' @param max.steps the number of iterations to solve the optimization problem.
 #' @param solver \code{"dual"} is available.
@@ -79,13 +101,13 @@ hinge_tksvc_dual_solver <- function(KernelX, y, C1, C2, C3, C4, epsilon,
 #' @param randx parameter for reduce SVM, default \code{randx = 0.1}.
 #' @return return \code{HingeSVMClassifier} object.
 #' @export
-hinge_tksvc <- function(X, y, C1 = 1, C2 = 1, C3 = C1, C4 = C2,
-                        kernel = c("linear", "rbf", "poly"),
-                        gamma = 1 / ncol(X), degree = 3, coef0 = 0,
-                        epsilon = 0.1,
-                        eps = 1e-5, max.steps = 4000,
-                        solver = c("dual"), fit_intercept = TRUE,
-                        randx = 1) {
+pin_tksvc <- function(X, y, C1 = 1, C2 = 1, C3 = C1, C4 = C2,
+                      kernel = c("linear", "rbf", "poly"),
+                      gamma = 1 / ncol(X), degree = 3, coef0 = 0,
+                      epsilon = 0.1, tau1 = 1, tau2 = 1, tau3 = tau1, tau4 = tau2,
+                      eps = 1e-5, max.steps = 5000,
+                      solver = c("dual"), fit_intercept = TRUE,
+                      randx = 1) {
   X <- as.matrix(X)
   y <- as.matrix(y)
   class_set <- sort(unique(y))
@@ -100,8 +122,9 @@ hinge_tksvc <- function(X, y, C1 = 1, C2 = 1, C3 = C1, C4 = C2,
     KernelX <- cbind(KernelX, 1)
   }
   if (solver == "dual") {
-    solver.res <- hinge_tksvc_dual_solver(KernelX, y, C1, C2, C3, C4, epsilon,
-                                          class_set, class_num, eps, max.steps)
+    solver.res <- pin_tksvc_dual_solver(KernelX, y, C1, C2, C3, C4, epsilon,
+                                        tau1, tau2, tau3, tau4,
+                                        class_set, class_num, eps, max.steps)
   }
   TKSVCClassifier <- list("X" = X, "y" = y, "class_set" = class_set,
                           "class_num" = class_num,
@@ -114,53 +137,4 @@ hinge_tksvc <- function(X, y, C1 = 1, C2 = 1, C3 = C1, C4 = C2,
                           "fit_intercept" = fit_intercept)
   class(TKSVCClassifier) <- "TKSVCClassifier"
   return(TKSVCClassifier)
-}
-
-#' Predict Method for Twin Support Vector Machine
-#'
-#' @author Zhang Jiaqi
-#' @param object a fitted object of class inheriting from \code{SVMClassifier}.
-#' @param X new data for predicting.
-#' @param ... unused parameter.
-#' @importFrom stats predict
-#' @export
-predict.TKSVCClassifier <- function(object, X, ...) {
-  X <- as.matrix(X)
-  if (object$kernel == "linear") {
-    KernelX <- X
-  } else {
-    KernelX <- kernel_function(X, object$X,
-                               kernel.type = object$kernel,
-                               gamma = object$gamma,
-                               degree = object$degree,
-                               coef0 = object$coef0)
-  }
-  if (object$fit_intercept == TRUE) {
-    KernelX <- cbind(KernelX, 1)
-  }
-  xn <- nrow(KernelX)
-  fx_pos <- KernelX %*% object$coef_pos
-  fx_neg <- KernelX %*% object$coef_neg
-  vote_mat <- matrix(0, xn, object$class_num)
-  classifier_idx <- 1
-
-  for (i in 1:(object$class_num - 1)) {
-    for (j in (i + 1):object$class_num) {
-      idx_pos <- which(fx_pos[, classifier_idx] > -1 + object$epsilon)
-      idx_neg <- which(fx_neg[, classifier_idx] <  1 - object$epsilon)
-      vote_mat[idx_pos, i] <- vote_mat[idx_pos, i] + 1
-      vote_mat[idx_neg, j] <- vote_mat[idx_neg, i] + 1
-      idx <- unique(c(idx_pos, idx_neg))
-      vote_mat[-idx, i] <- vote_mat[-idx, i] - 1
-      vote_mat[-idx, j] <- vote_mat[-idx, j] - 1
-      classifier_idx <- classifier_idx + 1
-
-    }
-  }
-  decf_idx <- apply(vote_mat, 1, which.max)
-  decf <- matrix(0, xn)
-  for (i in 1:object$class_num) {
-    decf[decf_idx == i] <- object$class_set[i]
-  }
-  return(decf)
 }
