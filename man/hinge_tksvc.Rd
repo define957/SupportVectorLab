@@ -8,7 +8,7 @@ hinge_tksvc(
   X,
   y,
   C1 = 1,
-  C2 = 1,
+  C2 = C1,
   C3 = C1,
   C4 = C2,
   kernel = c("linear", "rbf", "poly"),
