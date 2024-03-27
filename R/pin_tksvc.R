@@ -104,7 +104,7 @@ pin_tksvc_dual_solver <- function(KernelX, y, C1, C2, C3, C4, epsilon,
 pin_tksvc <- function(X, y, C1 = 1, C2 = 1, C3 = C1, C4 = C2,
                       kernel = c("linear", "rbf", "poly"),
                       gamma = 1 / ncol(X), degree = 3, coef0 = 0,
-                      epsilon = 0.1, tau1 = 1, tau2 = 1, tau3 = tau1, tau4 = tau2,
+                      epsilon = 0.1, tau1 = 1, tau2 = tau1, tau3 = tau1, tau4 = tau2,
                       eps = 1e-5, max.steps = 5000,
                       solver = c("dual"), fit_intercept = TRUE,
                       randx = 1) {

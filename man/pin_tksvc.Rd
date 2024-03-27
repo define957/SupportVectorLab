@@ -17,7 +17,7 @@ pin_tksvc(
   coef0 = 0,
   epsilon = 0.1,
   tau1 = 1,
-  tau2 = 1,
+  tau2 = tau1,
   tau3 = tau1,
   tau4 = tau2,
   eps = 1e-05,
