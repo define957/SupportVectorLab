@@ -8,7 +8,7 @@ hinge_tksvc(
   X,
   y,
   C1 = 1,
-  C2 = 1,
+  C2 = C1,
   C3 = C1,
   C4 = C2,
   kernel = c("linear", "rbf", "poly"),
@@ -55,7 +55,7 @@ the function will evaluates intercept.}
 \item{randx}{parameter for reduce SVM, default \code{randx = 0.1}.}
 }
 \value{
-return \code{HingeSVMClassifier} object.
+return \code{TKSVCClassifier} object.
 }
 \description{
 \code{hinge_tksvc} is an R implementation of Hinge-TKSVC
