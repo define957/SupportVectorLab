@@ -2,7 +2,7 @@
 % Please edit documentation in R/pin_tksvc.R
 \name{pin_tksvc}
 \alias{pin_tksvc}
-\title{Hinge Twin Multi-Class Support Vector Machine}
+\title{Pin Twin Multi-Class Support Vector Machine}
 \usage{
 pin_tksvc(
   X,
@@ -17,7 +17,7 @@ pin_tksvc(
   coef0 = 0,
   epsilon = 0.1,
   tau1 = 1,
-  tau2 = 1,
+  tau2 = tau1,
   tau3 = tau1,
   tau4 = tau2,
   eps = 1e-05,
@@ -61,10 +61,10 @@ the function will evaluates intercept.}
 \item{randx}{parameter for reduce SVM, default \code{randx = 0.1}.}
 }
 \value{
-return \code{HingeSVMClassifier} object.
+return \code{TKSVCClassifier} object.
 }
 \description{
-\code{hinge_tksvc} is an R implementation of Hinge-TKSVC
+\code{pin_tksvc} is an R implementation of Pin-TKSVC
 }
 \author{
 Zhang Jiaqi.
