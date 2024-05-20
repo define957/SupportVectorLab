@@ -4,11 +4,8 @@ als_svm_dual_solver <- function(KernelX, y, C = 1, p = 0.5,
   H <- calculate_svm_H(KernelX, y)
   H <- cbind(H, -H)
   H <- rbind(H, -H)
-  I1 <- diag(1/(p), n, n)
-  I12 <- matrix(0, n, n)
-  I4 <- diag(1/(1 - p), n, n)
-  In <- rbind(cbind(I1, I12), cbind(I12, I4))
-  H <- H + In/C
+  diagelem <- rep(c(1/(C*(p)), 1/(C*(1 - p))), rep(n, 2))
+  diag(H) <- diag(H) + diagelem
   q <- matrix(-1, nrow = 2*n)
   q[1:n] <- 1
   lb <- matrix(0, nrow = 2*n)
