@@ -4,11 +4,8 @@ als_svr_dual_solver <- function(KernelX, y, C = 1, p = 0.5,
   H <- KernelX
   H <- cbind(H, -H)
   H <- rbind(H, -H)
-  I1 <- diag(1/(p), n, n)
-  I12 <- matrix(0, n, n)
-  I4 <- diag(1/(1 - p), n, n)
-  In <- rbind(cbind(I1, I12), cbind(I12, I4))
-  H <- H + In/C
+  diagelem <- rep(c(1/(C*(p)), 1/(C*(1 - p))), rep(n, 2))
+  diag(H) <- diag(H) + diagelem
   q <- rbind(y, -y)
   lb <- matrix(0, 2*n)
   ub <- matrix(Inf, 2*n)
