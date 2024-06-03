@@ -36,9 +36,9 @@ Rcpp::List cpp_clip_dcd_optimizer(arma::mat H, arma::mat q,
   arma::vec lambda_max_list;
   arma::vec u_old(1);
   arma::vec u_new(1);
-  for (i = 0; i < n; i++) {
-    Hui(i, span::all) = H.row(i) % ut;
-  }
+  arma::mat umat(n, n);
+  umat.each_row() = ut;
+  Hui = H % umat;
   for(i = 0; i < max_steps; i++){
     numerator = q - Hu;
     L_idx_val = numerator / diagH;
