@@ -16,7 +16,7 @@ ramp_mbsvm_dual_solver <- function(KernelX, y, C, s, class_set, class_num,
     nGk <- length(class_idx)
     dim(Hk) <- c(xn - nGk, xp)
     dim(Gk) <- c(nGk, xp)
-    HTH_inv_Gt <- solve(t(Hk) %*% Hk + diag(1e-7, xp), t(Gk))
+    HTH_inv_Gt <- chol2inv(chol(t(Hk) %*% Hk + diag(1e-7, ncol(Hk)))) %*% t(Gk)
     G_HTH_inv_Gt <- Gk %*% HTH_inv_Gt
     ek <- matrix(1, nGk)
     u0 <- matrix(0, nGk)

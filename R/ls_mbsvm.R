@@ -13,7 +13,7 @@ ls_mbsvm_dual_solver <- function(KernelX, y, C, class_set, class_num) {
     GramHK <- t(Hk) %*% Hk
     GramGK <- t(Gk) %*% Gk
     ek <- matrix(1, nGk)
-    coefk[, i] <- C[i] * solve(GramHK + Ie + GramGK, t(Gk) %*% ek)
+    coefk[, i] <- C[i] * chol2inv(chol(GramHK + Ie + GramGK)) %*% t(Gk) %*% ek
   }
   BaseDualLeastSquaresMBSVMClassifier <- list("coef" = coefk)
   class(BaseDualLeastSquaresMBSVMClassifier) <- "BaseDualLeastSquaresMBSVMClassifier"
