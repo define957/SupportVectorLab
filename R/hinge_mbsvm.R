@@ -92,7 +92,7 @@ hinge_mbsvm <- function(X, y, C = 1,
 #' @param object a fitted object of class inheriting from \code{SVMClassifier}.
 #' @param X new data for predicting.
 #' @param values if set \code{values = TRUE}, this function will return predict
-#'               values: f = abs(wx+b).
+#'               values: f = w^{T}x+b.
 #' @param ... unused parameter.
 #' @importFrom stats predict
 #' @export
