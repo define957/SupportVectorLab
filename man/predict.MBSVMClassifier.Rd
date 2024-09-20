@@ -12,7 +12,7 @@
 \item{X}{new data for predicting.}
 
 \item{values}{if set \code{values = TRUE}, this function will return predict
-values: f = w^{T}x+b.}
+values: f = <w,x>+b.}
 
 \item{...}{unused parameter.}
 }
