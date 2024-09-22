@@ -13,7 +13,7 @@ hinge_tsvm_dual_solver <- function(KernelX, idx, C1, C2, eps, max.steps) {
   u0 <- matrix(0, Gn)
   a <- clip_dcd_optimizer(dualH, dualq1, duallb1, dualub1,
                           eps, max.steps, u0)$x
-  u <- - invHTH %*% t(G) %*% a
+  u <- -invHTH %*% t(G) %*% a
 
   invGTG <- chol2inv(chol(t(G) %*% G + diag(1e-7, xp)))
   dualH <- H %*% invGTG %*% t(H)
@@ -26,6 +26,7 @@ hinge_tsvm_dual_solver <- function(KernelX, idx, C1, C2, eps, max.steps) {
   v <- invGTG %*% t(H) %*% g
   BaseDualHingeTSVMClassifier <- list("coef1" = as.matrix(u),
                                       "coef2" = as.matrix(v))
+  return(BaseDualHingeTSVMClassifier)
 }
 
 #' Hinge Twin Support Vector Machine
@@ -168,7 +169,7 @@ plot.TSVMClassifier <- function(x, ...) {
   y[-idx] <- 1
   xlim_c <- c(min(x$X[,1]), max(x$X[, 1]))
   ylim_c <- c(min(x$X[,2]), max(x$X[, 2]))
-  if (length(coef1) ==3 && length(coef2) == 3) {
+  if (length(coef1) == 3 && length(coef2) == 3) {
     plot(x$X[idx, 1], x$X[idx, 2], col = "red", xlim = xlim_c, ylim = ylim_c,
          xlab = "", ylab = "")
     grid(10, 10, lwd = 2,col = "grey")
@@ -176,11 +177,11 @@ plot.TSVMClassifier <- function(x, ...) {
     if (x$kernel == "linear") {
       abline(a = -coef1[3]/coef1[2], b = -coef1[1]/coef1[2],
              lty = 1, col = "red")
-      abline(a = -(coef1[3]+1)/coef1[2], b = -coef1[1]/coef1[2],
+      abline(a = -(coef1[3] + 1)/coef1[2], b = -coef1[1]/coef1[2],
              lty = 2, col = "red")
       abline(a = -coef2[3]/coef2[2], b = -coef2[1]/coef2[2],
              lty = 1, col = "blue")
-      abline(a = -(coef2[3]-1)/coef2[2], b = -coef2[1]/coef2[2],
+      abline(a = -(coef2[3] - 1)/coef2[2], b = -coef2[1]/coef2[2],
              lty = 2, col = "blue")
     }
   }
