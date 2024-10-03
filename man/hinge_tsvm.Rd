@@ -13,7 +13,7 @@ hinge_tsvm(
   gamma = 1/ncol(X),
   degree = 3,
   coef0 = 0,
-  eps = 1e-14,
+  eps = 1e-05,
   max.steps = 4000,
   solver = c("dual"),
   fit_intercept = TRUE,

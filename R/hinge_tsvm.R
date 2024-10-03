@@ -57,7 +57,7 @@ hinge_tsvm_dual_solver <- function(KernelX, idx, C1, C2, eps, max.steps) {
 hinge_tsvm <- function(X, y, C1 = 1, C2 = C1,
                        kernel = c("linear", "rbf", "poly"),
                        gamma = 1 / ncol(X), degree = 3, coef0 = 0,
-                       eps = 1e-14, max.steps = 4000,
+                       eps = 1e-5, max.steps = 4000,
                        solver = c("dual"), fit_intercept = TRUE,
                        randx = 0.1, ...) {
   X <- as.matrix(X)
