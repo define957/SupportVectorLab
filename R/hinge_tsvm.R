@@ -134,8 +134,8 @@ predict.TSVMClassifier <- function(object, X, values = FALSE, ...) {
     norm1 <- norm1 + 1e-7
     norm2 <- norm2 + 1e-7
   }
-  fx1 <- f1 / norm1
-  fx2 <- f2 / norm2
+  fx1 <- f1 / sqrt(norm1)
+  fx2 <- f2 / sqrt(norm2)
   if (values == FALSE) {
     decf <- apply(cbind(fx1, fx2), 1, which.min)
     idx_pos <- which(decf == 1)

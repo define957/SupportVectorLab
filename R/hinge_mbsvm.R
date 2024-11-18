@@ -122,7 +122,7 @@ predict.MBSVMClassifier <- function(object, X, values = FALSE, ...) {
     for (i in 1:num_class) {
       coef_norm[i] <-  vK[i, ] %*% object$coef[1:xp, i]
     }
-    coef_norm <- as.numeric(coef_norm)
+    coef_norm <- as.numeric(sqrt(coef_norm))
   }
   coef_norm[coef_norm == 0] <- 1e-7
   decf_values <- abs(fx) / coef_norm
