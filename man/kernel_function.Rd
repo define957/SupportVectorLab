@@ -11,8 +11,7 @@ kernel_function(
   gamma = 1/ncol(x1),
   degree = 3,
   coef0 = 0,
-  symmetric = FALSE,
-  ...
+  symmetric = FALSE
 )
 }
 \arguments{
@@ -27,8 +26,6 @@ kernel_function(
 \item{coef0}{parameter for polynomial kernel,  default: \code{coef0 = 0}.}
 
 \item{symmetric}{if \code{x1 == x2} you can set \code{symmetric == TRUE}.}
-
-\item{...}{redundant parameters.}
 }
 \description{
 Kernel Function

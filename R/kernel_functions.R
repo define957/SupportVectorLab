@@ -51,7 +51,6 @@ kernel_function <- function(x1, x2,
   return(K)
 }
 
-
 kernel_select_option <- function(X, kernel, solver, randx,
                                  gamma, degree, coef0, ...) {
   n <- nrow(X)
