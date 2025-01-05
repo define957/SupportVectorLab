@@ -5,25 +5,26 @@ hinge_tsvm_dual_solver <- function(KernelX, idx, C1, C2, eps, max.steps) {
   xp <- ncol(KernelX)
   Hn <- nrow(H)
   Gn <- xn - Hn
-  invHTH <- chol2inv(chol(t(H) %*% H + diag(1e-7, xp)))
-  dualH <- G %*% invHTH %*% t(G)
+
+  invHTH_GT <- cholsolve(t(H) %*% H + diag(1e-7, xp), t(G))
+  dualH <- G %*% invHTH_GT
   dualq1 <- matrix(1, Gn)
   duallb1 <- matrix(0, Gn)
   dualub1 <- matrix(C1, Gn)
   u0 <- matrix(0, Gn)
   a <- clip_dcd_optimizer(dualH, dualq1, duallb1, dualub1,
                           eps, max.steps, u0)$x
-  u <- -invHTH %*% t(G) %*% a
+  u <- -invHTH_GT %*% a
 
-  invGTG <- chol2inv(chol(t(G) %*% G + diag(1e-7, xp)))
-  dualH <- H %*% invGTG %*% t(H)
+  invGTG_HT <- cholsolve(t(G) %*% G + diag(1e-7, xp), t(H))
+  dualH <- H %*% invGTG_HT
   dualq2 <- matrix(1, Hn)
   duallb2 <- matrix(0, Hn)
   dualub2 <- matrix(C2, Hn)
   u0 <- matrix(0, Hn)
   g <- clip_dcd_optimizer(dualH, dualq2, duallb2, dualub2,
                           eps, max.steps, u0)$x
-  v <- invGTG %*% t(H) %*% g
+  v <- invGTG_HT %*% g
   BaseDualHingeTSVMClassifier <- list("coef1" = as.matrix(u),
                                       "coef2" = as.matrix(v))
   return(BaseDualHingeTSVMClassifier)
