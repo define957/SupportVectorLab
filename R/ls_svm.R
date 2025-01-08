@@ -1,7 +1,7 @@
 ls_svm_dual_solver <- function(KernelX, y, C = 1) {
   H <- calculate_svm_H(KernelX, y)
   m <- nrow(KernelX)
-  u <- solve((H + diag(1/C, m)), matrix(1, nrow = m))
+  u <- cholsolve((H + diag(1/C, m)), matrix(1, nrow = m))
   coef <- y*u
   BaseDualLeastSquaresSVMClassifier <- list(coef = as.matrix(coef))
   class(BaseDualLeastSquaresSVMClassifier) <- "BaseDualLeastSquaresSVMClassifier"
@@ -12,7 +12,7 @@ ls_svm_dual_solver <- function(KernelX, y, C = 1) {
 ls_svm_primal_solver <- function(KernelX, y, C = 1,
                                  max.steps = 80, batch_size = nrow(KernelX) / 10,
                                  optimizer = pegasos, ...) {
-   gLeastSquares <- function(KernelX, y, w, pars,...) { # gradient of Least Squares loss function
+  gLeastSquares <- function(KernelX, y, w, pars,...) { # gradient of Least Squares loss function
     C <- pars$C
     xn <- pars$xn
     xmn <- nrow(KernelX)
@@ -21,7 +21,7 @@ ls_svm_primal_solver <- function(KernelX, y, C = 1,
     u <- 1 - y * (KernelX %*% w)
     sg <- w - (C*xn/xmn) * t(KernelX) %*% (u*y)
     return(sg)
-   }
+  }
   xn <- ncol(KernelX)
   xp <- ncol(KernelX)
   w0 <- matrix(0, nrow = xp, ncol = 1)
