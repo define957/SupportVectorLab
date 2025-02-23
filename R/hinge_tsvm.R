@@ -60,7 +60,7 @@ hinge_tsvm <- function(X, y, C1 = 1, C2 = C1,
                        gamma = 1 / ncol(X), degree = 3, coef0 = 0,
                        eps = 1e-5, max.steps = 4000,
                        solver = c("dual"), fit_intercept = TRUE,
-                       randx = 0.1, ...) {
+                       randx = 1, ...) {
   X <- as.matrix(X)
   y <- as.matrix(y)
   class_set <- sort(unique(y))
