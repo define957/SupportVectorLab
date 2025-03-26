@@ -125,7 +125,7 @@ plot.SVMClassifier <- function(x, ...) {
   if (ncol(x$X) == 3) {
     plot(x$X[idx, 1], x$X[idx, 2], col = "red", xlim = xlim_c, ylim = ylim_c,
          xlab = "", ylab = "")
-    grid(10, 10, lwd = 2,col = "grey")
+    grid(lwd = 2,col = "grey")
     points(x$X[-idx, 1], x$X[-idx, 2], col = "blue")
     if (x$kernel == "linear") {
       abline(a = -coefs[3]/coefs[2], b = -coefs[1]/coefs[2],
