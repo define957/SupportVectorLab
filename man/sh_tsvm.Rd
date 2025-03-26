@@ -17,7 +17,7 @@ sh_tsvm(
   max.steps = 4000,
   solver = c("dual"),
   fit_intercept = TRUE,
-  randx = 0.1
+  randx = 1
 )
 }
 \arguments{

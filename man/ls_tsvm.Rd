@@ -15,7 +15,7 @@ ls_tsvm(
   coef0 = 0,
   solver = c("dual"),
   fit_intercept = TRUE,
-  randx = 0.1,
+  randx = 1,
   ...
 )
 }
