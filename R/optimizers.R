@@ -54,7 +54,7 @@ pegasos <- function(X, y, w, m, max.steps, fx, pars,
 #' @return return optimal solution.
 #' @export
 nesterov <- function(X, y, w, m, max.steps, fx, pars,
-                     v = matrix(0, nrow(w)), lr = 1, gam = 0.5,
+                     v = matrix(0, nrow(w)), lr = 0.01, gam = 0.9,
                      decay_option = exp_decay, ...) {
   sample_seed <- list(...)$sample_seed
   if (is.null(sample_seed) == FALSE) {
@@ -64,10 +64,10 @@ nesterov <- function(X, y, w, m, max.steps, fx, pars,
   px <- ncol(X)
   for (t in 1:max.steps) {
     At <- sample(nx, m)
-    xm <- X[At, ]
-    dim(xm) <- c(m, px)
+    xm <- X[At, , drop = FALSE]
     ym <- as.matrix(y[At])
-    v <- gam*v - lr*fx(xm, ym, w + gam*v, pars, At = At)
+    dF <- fx(xm, ym, w + gam*v, pars, At = At)
+    v <- gam*v - lr*dF
     w <- w + v
     if (is.null(decay_option) == FALSE) {
       lr <- decay_option(lr, steps = t, ...)
@@ -151,7 +151,7 @@ conjugate_gradient_method <- function(A, b, x, max.steps, eps = 1e-5, ...) {
 #' @param w initial point.
 #' @param m mini-batch size for pegasos solver.
 #' @param max.steps the number of iterations to solve the optimization problem.
-#' @param fx sub-gradient of objective function.
+#' @param fx sub-gradient/gradient of objective function.
 #' @param pars parameters list for the sub-gradient.
 #' @param lr initial learning rate.
 #' @param beta1 first order moment parameter.
@@ -170,6 +170,8 @@ adam <- function(X, y, w, m, max.steps, fx, pars,
   xp <- ncol(X)
   mt <- matrix(0, xp, 1)
   vt <- mt
+  beta1t <- beta1
+  beta2t <- beta2
   for (t in 1:max.steps) {
     At <- sample(xn, m)
     xm <- X[At, ]
@@ -178,9 +180,11 @@ adam <- function(X, y, w, m, max.steps, fx, pars,
     dF <- fx(xm, ym, w, pars, At = At)
     mt <- beta1*mt + (1 - beta1)*dF
     vt <- beta2*vt + (1 - beta2)*(dF*dF)
-    mt_hat <- mt/(1 - beta1^t)
-    vt_hat <- vt/(1 - beta2^t)
-    w <- w - lr*(mt_hat/(sqrt(vt_hat) + delta)) * dF
+    mt_hat <- mt/(1 - beta1t)
+    vt_hat <- vt/(1 - beta2t)
+    w <- w - lr*(mt_hat/(sqrt(vt_hat) + delta))
+    beta1t <- beta1t*beta1
+    beta2t <- beta2t*beta2
   }
   return(w)
 }

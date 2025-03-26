@@ -13,8 +13,8 @@ nesterov(
   fx,
   pars,
   v = matrix(0, nrow(w)),
-  lr = 1,
-  gam = 0.5,
+  lr = 0.01,
+  gam = 0.9,
   decay_option = exp_decay,
   ...
 )

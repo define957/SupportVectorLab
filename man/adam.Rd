@@ -28,7 +28,7 @@ adam(
 
 \item{max.steps}{the number of iterations to solve the optimization problem.}
 
-\item{fx}{sub-gradient of objective function.}
+\item{fx}{sub-gradient/gradient of objective function.}
 
 \item{pars}{parameters list for the sub-gradient.}
 
