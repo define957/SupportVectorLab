@@ -18,7 +18,7 @@ ls_svm(
   solver = c("dual", "primal"),
   fit_intercept = TRUE,
   optimizer = pegasos,
-  randx = 0.1,
+  reduce_set = NULL,
   ...
 )
 }
@@ -53,7 +53,7 @@ the function will evaluates intercept.}
 
 \item{optimizer}{default primal optimizer pegasos.}
 
-\item{randx}{parameter for reduce SVM, default \code{randx = 0.1}.}
+\item{reduce_set}{reduce set for reduce SVM, default \code{reduce_set = NULL}.}
 
 \item{...}{unused parameters.}
 }

@@ -13,12 +13,12 @@ hinge_svm(
   degree = 3,
   coef0 = 0,
   eps = 1e-05,
-  max.steps = 80,
+  max.steps = 4000,
   batch_size = nrow(X)/10,
   solver = c("dual", "primal"),
   fit_intercept = TRUE,
   optimizer = pegasos,
-  randx = 0.1,
+  reduce_set = NULL,
   ...
 )
 }
@@ -53,12 +53,12 @@ the function will evaluates intercept.}
 
 \item{optimizer}{default primal optimizer pegasos.}
 
-\item{randx}{parameter for reduce SVM, default \code{randx = 0.1}.}
+\item{reduce_set}{reduce set for reduce SVM, default \code{reduce_set = NULL}.}
 
 \item{...}{unused parameters.}
 }
 \value{
-return \code{HingeSVMClassifier} object.
+return \code{SVMClassifier} object.
 }
 \description{
 \code{hinge_svm} is an R implementation of Hinge-SVM

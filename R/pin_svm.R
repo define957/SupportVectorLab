@@ -19,27 +19,36 @@ pin_svm_dual_solver <- function(KernelX, y, C = 1, tau = 0.5,
 }
 
 
-pin_svm_primal_solver <- function(KernelX, y, C = 1, tau = 0.5,
-                                  max.steps = 80, batch_size = nrow(KernelX) / 10,
-                                  optimizer = pegasos, ...) {
-  sgpinball <- function(KernelX, y, w, pars, ...) { # sub-gradient of Pinball loss function
+pin_svm_primal_solver <- function(KernelX, X, y, C, tau,
+                                  max.steps, batch_size,
+                                  optimizer, kernel, reduce_flag,
+                                  reduce_set, ...) {
+  sgpinball <- function(batch_KernelX, y, w, pars, ...) { # sub-gradient of Pinball loss function
     C <- pars$C
     xn <- pars$xn
-    tau <- pars$tau
-    xmn <- nrow(KernelX)
-    xmp <- ncol(KernelX)
-    sg <- matrix(0, xmp, 1)
-    u <- 1 - y * (KernelX %*% w)
+    KernelX <- pars$KernelX
+    xmn <- nrow(batch_KernelX)
+    xmp <- ncol(batch_KernelX)
+    sg <- matrix(0, nrow = xmp, ncol = 1)
+    u <- 1 - y * (batch_KernelX %*% w)
     u[u <= 0] <- -tau
     u[u > 0] <- 1
-    sg <- w - (C*xn/xmn) * t(KernelX) %*% (u*y)
-    return(sg)
+    if (pars$kernel == "linear" || pars$reduce_flag) {
+      sg <- w*xmn/xn - C * t(batch_KernelX) %*% (u*y)
+    } else if (pars$kernel != "linear") {
+      sg <- KernelX %*% w * xmn/xn - C * t(batch_KernelX) %*% (u*y)
+    }
   }
-  xn <- nrow(KernelX)
-  xp <- ncol(KernelX)
+  xn <- nrow(X)
+  if (kernel == "linear") { xp <- ncol(X) } else { xp <- ncol(KernelX)}
   w0 <- matrix(0, nrow = xp, ncol = 1)
-  pars <- list("C" = C, "tau" = tau, "xn" = xn)
-  wt <- optimizer(KernelX, y, w0, batch_size, max.steps, sgpinball, pars, ...)
+  pars <- list("C" = C, "tau" = tau, "xn" = xn, "kernel" = kernel,
+               "KernelX" = KernelX, "reduce_flag" = reduce_flag)
+  if (kernel == "linear") {
+    wt <- optimizer(X, y, w0, batch_size, max.steps, sgpinball, pars, ...)
+  } else {
+    wt <- optimizer(KernelX, y, w0, batch_size, max.steps, sgpinball, pars, ...)
+  }
   BasePrimalPinSVMClassifier <- list(coef = as.matrix(wt[1:xp]))
   class(BasePrimalPinSVMClassifier) <- "BasePrimalPinSVMClassifier"
   return(BasePrimalPinSVMClassifier)
@@ -70,16 +79,17 @@ pin_svm_primal_solver <- function(KernelX, y, C = 1, tau = 0.5,
 #' @param fit_intercept if set \code{fit_intercept = TRUE},
 #'                      the function will evaluates intercept.
 #' @param optimizer default primal optimizer pegasos.
-#' @param randx parameter for reduce SVM, default \code{randx = 0.1}.
+#' @param reduce_set reduce set for reduce SVM, default \code{reduce_set = NULL}.
 #' @param ... unused parameters.
 #' @return return \code{SVMClassifier} object.
 #' @export
 pin_svm <- function(X, y, C = 1, kernel = c("linear", "rbf", "poly"),
                     tau = 0.5,
                     gamma = 1 / ncol(X), degree = 3, coef0 = 0,
-                    eps = 1e-5, max.steps = 80, batch_size = nrow(X) / 10,
+                    eps = 1e-5, max.steps = 4000, batch_size = nrow(X) / 10,
                     solver = c("dual", "primal"),
-                    fit_intercept = TRUE, optimizer = pegasos, randx = 0.1, ...) {
+                    fit_intercept = TRUE, optimizer = pegasos,
+                    reduce_set = NULL, ...) {
   X <- as.matrix(X)
   y <- as.matrix(y)
   class_set <- sort(unique(y))
@@ -95,19 +105,28 @@ pin_svm <- function(X, y, C = 1, kernel = c("linear", "rbf", "poly"),
   if (fit_intercept == TRUE) {
     X <- cbind(X, 1)
   }
-  kso <- kernel_select_option(X, kernel, solver, randx,
-                              gamma, degree, coef0)
+  reduce_flag <- is.null(reduce_set) == FALSE
+  if (solver == "dual" && reduce_flag == TRUE) {
+    reduce_flag <- FALSE
+    reduce_set <- NULL
+    cat("The dual solver does not support the reduce set; it has been set to NULL.\n")
+  }
+  kso <- kernel_select_option_(X, kernel, reduce_set, gamma, degree, coef0)
   KernelX <- kso$KernelX
-  X <- kso$X
   if (solver == "primal") {
-    solver.res <- pin_svm_primal_solver(KernelX, y, C, tau,
+    solver.res <- pin_svm_primal_solver(KernelX, X, y, C, tau,
                                         max.steps, batch_size,
-                                        optimizer, ...)
+                                        optimizer, kernel, reduce_flag,
+                                        reduce_set,
+                                        ...)
   } else if (solver == "dual") {
     solver.res <- pin_svm_dual_solver(KernelX, y, C, tau, eps,
                                       max.steps)
   }
-  SVMClassifier <- list("X" = X, "y" = y, "class_set" = class_set,
+  SVMClassifier <- list("X" = X, "y" = y,
+                        "reduce_flag" = reduce_flag,
+                        "reduce_set" = reduce_set,
+                        "class_set" = class_set,
                         "C" = C, "kernel" = kernel,
                         "gamma" = gamma, "degree" = degree, "coef0" = coef0,
                         "solver" = solver, "coef" = solver.res$coef,
