@@ -30,9 +30,9 @@ hinge_svm_primal_solver <- function(KernelX, X, y, C,
     u[u <= 0] <- 0
     u[u > 0] <- 1
     if (pars$kernel == "linear" || pars$reduce_flag) {
-      sg <- w*xmn/xn - C * t(batch_KernelX) %*% (u*y)
+      sg <- w / xn - C * t(batch_KernelX) %*% (u*y) / xmn
     } else if (pars$kernel != "linear") {
-      sg <- KernelX %*% w * xmn/xn - C * t(batch_KernelX) %*% (u*y)
+      sg <- KernelX %*% w / xn - C * t(batch_KernelX) %*% (u*y) / xmn
     }
     return(sg)
   }

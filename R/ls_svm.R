@@ -23,9 +23,9 @@ ls_svm_primal_solver <- function(KernelX, X, y, C,
     g <- matrix(0, xmp, 1)
     u <- 1 - y * (batch_KernelX %*% w)
     if (pars$kernel == "linear" || pars$reduce_flag) {
-      g <- w*xmn/xn - C * t(batch_KernelX) %*% (u*y)
+      g <- w / xn - C * t(batch_KernelX) %*% (u*y) / xmn
     } else if (pars$kernel != "linear") {
-      g <- KernelX %*% w * xmn/xn - C * t(batch_KernelX) %*% (u*y)
+      g <- KernelX %*% w / xn - C * t(batch_KernelX) %*% (u*y) / xmn
     }
     return(g)
   }

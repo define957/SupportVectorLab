@@ -15,9 +15,9 @@ qtls_svm_primal_solver <- function(KernelX, X, y, C, a,
     expau <- exp(a*u)
     sgterm <- (2*C*u*expau + C*(u^2)*expau*a)*y
     if (pars$kernel == "linear" || pars$reduce_flag) {
-      g <- w*xmn/xn + t(batch_KernelX) %*% sgterm
+      g <- w / xn + t(batch_KernelX) %*% sgterm / xmn
     } else if (pars$kernel != "linear") {
-      g <- KernelX %*% w * xmn/xn + t(batch_KernelX) %*% sgterm
+      g <- KernelX %*% w / xn + t(batch_KernelX) %*% sgterm / xmn
     }
     return(g)
   }
