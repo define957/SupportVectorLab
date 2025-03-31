@@ -9,7 +9,8 @@ Description: An R package containing many SVMs with fast C++ dual solver.
 License: file LICENSE
 Encoding: UTF-8
 LazyData: true
-Imports: Rcpp (>= 1.0.10)
+Imports: Rcpp (>= 1.0.10),
+         iterators
 LinkingTo: Rcpp,
            RcppArmadillo
 RoxygenNote: 7.3.2

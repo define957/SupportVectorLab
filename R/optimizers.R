@@ -195,3 +195,18 @@ exp_decay <- function(lr, steps, s = 0.001, ...) {
   return(lr)
 }
 
+#' A Batch Indices Iterator
+#'
+#' @param n number of samples.
+#' @param batch_size batch size (0 < batch_size <= n).
+#' @import iterators
+#' @export
+batch_iter <- function(n, batch_size) {
+  current <- 1
+  iterators::iter(function() if (current > n) stop("StopIteration") else {
+    end <- min(current + batch_size - 1, n)
+    indices <- current:end
+    current <<- end + 1
+    indices
+  })
+}
