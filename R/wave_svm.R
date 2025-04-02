@@ -17,15 +17,15 @@ wave_svm_primal_solver <- function(KernelX, X, y, C, a, lambda,
       expau <- exp(a*u)
       for (i in 1:nrow(X)) {
         grad <- grad +
-          y[i] * t(X[i, , drop = FALSE]) * u[i] * (2 + u[i]) * expau[i] /
+          y[i] * t(X[i, , drop = FALSE]) * u[i] * (2 + a*u[i]) * expau[i] /
           (1 + lambda*(u[i]^2) * expau[i])^2
       }
       return(grad)
     }
     if (pars$kernel == "linear" || pars$reduce_flag) {
-      g <- w * xmn / xn - C * grad_wave(batch_KernelX, y, u, a, lambda)
+      g <- w / xn - C * grad_wave(batch_KernelX, y, u, a, lambda) / xmn
     } else if (pars$kernel != "linear") {
-      g <- KernelX %*% w * xmn/xn - C * grad_wave(batch_KernelX, y, u, a, lambda)
+      g <- KernelX %*% w /xn - C * grad_wave(batch_KernelX, y, u, a, lambda) / xmn
     }
     return(g)
   }
@@ -39,7 +39,6 @@ wave_svm_primal_solver <- function(KernelX, X, y, C, a, lambda,
   } else {
     wt <- optimizer(KernelX, y, w0, batch_size, max.steps, gWave, pars, ...)
   }
-  print(wt)
   BasePrimalWaveSVMClassifier <- list(coef = as.matrix(wt[1:xp]))
   class(BasePrimalWaveSVMClassifier) <- "BasePrimalWaveSVMClassifier"
   return(BasePrimalWaveSVMClassifier)
