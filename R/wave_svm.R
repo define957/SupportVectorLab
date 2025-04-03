@@ -16,7 +16,7 @@ wave_svm_primal_solver <- function(KernelX, X, y, C, a, lambda,
       expau <- exp(a*u)
       idx <- which(expau != Inf)
       grad <- t(X[idx, , drop = FALSE]) %*%
-        ((y*u[idx]*(2 + a*u[idx])*exp(a*u[idx])) / (1 + lambda*u*exp(a*u[idx]))^2)
+        ((y*u[idx]*(2 + a*u[idx])*exp(a*u[idx])) / (1 + lambda*u[idx]*exp(a*u[idx]))^2)
       return(grad)
     }
     if (pars$kernel == "linear" || pars$reduce_flag) {
