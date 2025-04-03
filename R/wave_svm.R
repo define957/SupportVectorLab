@@ -13,13 +13,10 @@ wave_svm_primal_solver <- function(KernelX, X, y, C, a, lambda,
     xmp <- ncol(batch_KernelX)
     u <- 1 - y * (batch_KernelX %*% w)
     grad_wave <- function(X, y, u, a, lambda) {
-      grad <- matrix(0, ncol(X), 1)
       expau <- exp(a*u)
-      for (i in 1:nrow(X)) {
-        grad <- grad +
-          y[i] * t(X[i, , drop = FALSE]) * u[i] * (2 + a*u[i]) * expau[i] /
-          (1 + lambda*(u[i]^2) * expau[i])^2
-      }
+      idx <- which(expau != Inf)
+      grad <- t(X[idx, , drop = FALSE]) %*%
+        ((y*u[idx]*(2 + a*u[idx])*exp(a*u[idx])) / (1 + lambda*u*exp(a*u[idx]))^2)
       return(grad)
     }
     if (pars$kernel == "linear" || pars$reduce_flag) {
