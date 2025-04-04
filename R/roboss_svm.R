@@ -69,7 +69,7 @@ roboss_svm <- function(X, y, C = 1, kernel = c("linear", "rbf", "poly"),
                        gamma = 1 / ncol(X), degree = 3, coef0 = 0,
                        a = 1, lambda = 1,
                        max.steps = 4000, batch_size = nrow(X) / 10,
-                       fit_intercept = TRUE, optimizer = adam,
+                       fit_intercept = TRUE, optimizer = nesterov,
                        reduce_set = NULL,
                        ...) {
   X <- as.matrix(X)
