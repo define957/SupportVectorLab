@@ -15,7 +15,7 @@ nesterov(
   v = matrix(0, nrow(w)),
   lr = 0.01,
   gam = 0.9,
-  decay_option = exp_decay,
+  decay_option = NULL,
   ...
 )
 }

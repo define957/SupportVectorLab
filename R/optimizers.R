@@ -55,7 +55,7 @@ pegasos <- function(X, y, w, m, max.steps, fx, pars,
 #' @export
 nesterov <- function(X, y, w, m, max.steps, fx, pars,
                      v = matrix(0, nrow(w)), lr = 0.01, gam = 0.9,
-                     decay_option = exp_decay, ...) {
+                     decay_option = NULL, ...) {
   sample_seed <- list(...)$sample_seed
   if (is.null(sample_seed) == FALSE) {
     set.seed(sample_seed)
@@ -204,9 +204,9 @@ exp_decay <- function(lr, steps, s = 0.001, ...) {
 batch_iter <- function(n, batch_size) {
   current <- 1
   iterators::iter(function() if (current > n) stop("StopIteration") else {
-    end <- min(current + batch_size - 1, n)
-    indices <- current:end
-    current <<- end + 1
-    indices
-  })
+                  end <- min(current + batch_size - 1, n)
+                  indices <- current:end
+                  current <<- end + 1
+                  indices
+                  })
 }
