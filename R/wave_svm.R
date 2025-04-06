@@ -12,17 +12,15 @@ wave_svm_primal_solver <- function(KernelX, X, y, C, a, lambda,
     xmn <- nrow(batch_KernelX)
     xmp <- ncol(batch_KernelX)
     u <- 1 - y * (batch_KernelX %*% w)
-    grad_wave <- function(X, y, u, a, lambda) {
-      expau <- exp(a*u)
-      idx <- which(expau != Inf)
-      grad <- t(X[idx, , drop = FALSE]) %*%
-        ((y*u[idx]*(2 + a*u[idx])*exp(a*u[idx])) / (1 + lambda*u[idx]*exp(a*u[idx]))^2)
-      return(grad)
-    }
+    expau <- exp(a*u)
+    idx <- which(is.finite(expau))
+    grad_wave <- - t(batch_KernelX[idx, , drop = FALSE]) %*%
+      ((y[idx] * u[idx] * (2 + a*u[idx]) * exp(a*u[idx])) /
+         (1 + lambda*u[idx]^2*exp(a*u[idx]))^2)
     if (pars$kernel == "linear" || pars$reduce_flag) {
-      g <- w / xn - C * grad_wave(batch_KernelX, y, u, a, lambda) / xmn
+      g <- w / xn + C * grad_wave / xmn
     } else if (pars$kernel != "linear") {
-      g <- KernelX %*% w /xn - C * grad_wave(batch_KernelX, y, u, a, lambda) / xmn
+      g <- KernelX %*% w /xn + C * grad_wave / xmn
     }
     return(g)
   }

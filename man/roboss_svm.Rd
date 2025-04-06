@@ -17,7 +17,7 @@ roboss_svm(
   max.steps = 4000,
   batch_size = nrow(X)/10,
   fit_intercept = TRUE,
-  optimizer = adam,
+  optimizer = nesterov,
   reduce_set = NULL,
   ...
 )
