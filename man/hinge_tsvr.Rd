@@ -17,10 +17,8 @@ hinge_tsvr(
   coef0 = 0,
   eps = 1e-07,
   max.steps = 4000,
-  solver = c("dual"),
   fit_intercept = TRUE,
-  reduce_set = NULL,
-  ...
+  reduce_set = NULL
 )
 }
 \arguments{
@@ -47,14 +45,10 @@ hinge_tsvr(
 
 \item{max.steps}{the number of iterations to solve the optimization problem.}
 
-\item{solver}{\code{"dual"} is available.}
-
 \item{fit_intercept}{if set \code{fit_intercept = TRUE},
 the function will evaluates intercept.}
 
-\item{...}{unused parameters.}
-
-\item{randx}{parameter for reduce SVM, default \code{randx = 0.1}.}
+\item{reduce_set}{reduce set for reduce SVM, default \code{reduce_set = NULL}.}
 }
 \value{
 return \code{TSVRClassifier} object.
