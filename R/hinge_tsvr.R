@@ -130,7 +130,7 @@ plot.TSVRRegressor <- function(x, ...) {
   idx2sv <- which(x$solver.res$lag2 != 0)
   idxsv <- union(idx1sv, idx2sv)
   if (xp == 1) {
-    plot(x$X[-idxsv], x$y[-idxsv], xlim = xlim_c, ylim = ylim_c,
+    plot(x$X, x$y, xlim = xlim_c, ylim = ylim_c,
          xlab = "x", ylab = "y")
     grid(lwd = 2,col = "grey")
     points(x$X[idxsv], x$y[idxsv], col = "red")
