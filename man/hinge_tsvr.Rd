@@ -26,7 +26,7 @@ hinge_tsvr(
 
 \item{C1, C2}{plenty term.}
 
-\item{epsilon1, epsilon2}{parameter for epsilon tabe.}
+\item{epsilon1, epsilon2}{parameter for epsilon tube.}
 
 \item{kernel}{kernel function. The definitions of various kernel functions are as follows:
 \describe{

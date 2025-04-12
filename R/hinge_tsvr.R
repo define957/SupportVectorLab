@@ -2,9 +2,9 @@ hinge_tsvr_dual_solver <- function(KernelX, y, C1, C2, epsilon1, epsilon2,
                                    eps, max.steps) {
   xn <- nrow(KernelX)
   xp <- ncol(KernelX)
-  H <- KernelX
-  HTH_inv_H <- cholsolve(t(H) %*% H + diag(1e-7, xp), t(H))
-  dualH <- H %*% HTH_inv_H
+  G <- KernelX
+  GTG_inv_G <- cholsolve(t(G) %*% G + diag(1e-7, xp), t(G))
+  dualH <- G %*% GTG_inv_G
 
   f <- as.matrix(y - epsilon1)
   h <- as.matrix(y + epsilon2)
@@ -15,12 +15,14 @@ hinge_tsvr_dual_solver <- function(KernelX, y, C1, C2, epsilon1, epsilon2,
   lb <- matrix(0, xn, 1)
   ub1 <- matrix(C1, xn, 1)
   ub2 <- matrix(C2, xn, 1)
+
   x0 <- lb
+
   alphas <- clip_dcd_optimizer(dualH, q1, lb, ub1, eps, max.steps, x0)$x
   gammas <- clip_dcd_optimizer(dualH, q2, lb, ub2, eps, max.steps, x0)$x
 
-  u1 <- HTH_inv_H %*% (f - alphas)
-  u2 <- HTH_inv_H %*% (h + gammas)
+  u1 <- GTG_inv_G %*% (f - alphas)
+  u2 <- GTG_inv_G %*% (h + gammas)
 
   BaseDualHingeTSVRRegressor <- list("coef1" = as.matrix(u1),
                                      "coef2" = as.matrix(u2),
@@ -35,7 +37,7 @@ hinge_tsvr_dual_solver <- function(KernelX, y, C1, C2, epsilon1, epsilon2,
 #' @author Zhang Jiaqi.
 #' @param X,y dataset and label.
 #' @param C1,C2 plenty term.
-#' @param epsilon1,epsilon2 parameter for epsilon tabe.
+#' @param epsilon1,epsilon2 parameter for epsilon tube.
 #' @param kernel kernel function. The definitions of various kernel functions are as follows:
 #' \describe{
 #'     \item{linear:}{\eqn{u'v}{u'*v}}
