@@ -74,7 +74,7 @@ hinge_tsvr <- function(X, y, C1 = 1, C2 = C1,
   }
   solver.res <- hinge_tsvr_dual_solver(KernelX, y, C1, C2, epsilon1, epsilon2,
                                        eps, max.steps)
-  TSVRegressor <- list("X" = X, "y" = y,
+  TSVRRegressor <- list("X" = X, "y" = y,
                        "C1" = C1, "C2" = C2,
                        "epsilon1" = epsilon1, "epsilon2" = epsilon2,
                        "kernel" = kernel,
@@ -82,9 +82,9 @@ hinge_tsvr <- function(X, y, C1 = 1, C2 = C1,
                        "coef1" = solver.res$coef1,
                        "coef2" = solver.res$coef2,
                        "fit_intercept" = fit_intercept,
-                       solver.res = solver.res)
-  class(TSVRegressor) <- "TSVRegressor"
-  return(TSVRegressor)
+                       "solver.res" = solver.res)
+  class(TSVRRegressor) <- "TSVRRegressor"
+  return(TSVRRegressor)
 }
 
 
@@ -96,7 +96,7 @@ hinge_tsvr <- function(X, y, C1 = 1, C2 = C1,
 #' @param ... unused parameter.
 #' @importFrom stats predict
 #' @export
-predict.TSVRegressor <- function(object, X, ...) {
+predict.TSVRRegressor <- function(object, X, ...) {
   X <- as.matrix(X)
   if (object$kernel == "linear") {
     KernelX <- X
@@ -115,6 +115,28 @@ predict.TSVRegressor <- function(object, X, ...) {
 }
 
 
-# plot.TSVRRegressor <- function(object) {
-#
-# }
+#' Plot Method for Twin Support Vector Regression
+#'
+#' @author Zhang Jiaqi
+#' @param x a fitted object of class inheriting from \code{TSVRRegressor}.
+#' @param ... unused parameter.
+#' @importFrom graphics abline grid points
+#' @export
+plot.TSVRRegressor <- function(x, ...) {
+  xp <- ncol(x$X)
+  xlim_c <- c(min(x$X[,1]), max(x$X[, 1]))
+  ylim_c <- c(min(x$y), max(x$y))
+  idx1sv <- which(x$solver.res$lag1 != 0)
+  idx2sv <- which(x$solver.res$lag2 != 0)
+  idxsv <- union(idx1sv, idx2sv)
+  if (xp == 1) {
+    plot(x$X[-idxsv], x$y[-idxsv], xlim = xlim_c, ylim = ylim_c,
+         xlab = "x", ylab = "y")
+    grid(lwd = 2,col = "grey")
+    points(x$X[idxsv], x$y[idxsv], col = "red")
+    abline(x$coef1[2], x$coef1[1], col = "blue")
+    abline(x$coef1[2] + x$epsilon1, x$coef1[1], col = "blue", lty = 2)
+    abline(x$coef2[2], x$coef2[1], col = "blue")
+    abline(x$coef2[2] - x$epsilon2, x$coef2[1], col = "blue", lty = 2)
+  }
+}
