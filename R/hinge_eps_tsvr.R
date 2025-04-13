@@ -135,5 +135,6 @@ plot.EPSTWSVRRegressor <- function(x, ...) {
     abline(x$coef1[2] - x$epsilon1, x$coef1[1], col = "blue", lty = 2)
     abline(x$coef2[2], x$coef2[1], col = "blue")
     abline(x$coef2[2] + x$epsilon2, x$coef2[1], col = "blue", lty = 2)
+    abline((x$coef1[2] + x$coef2[2]) / 2, (x$coef1[1] + x$coef2[1]) / 2, col = "black")
   }
 }
