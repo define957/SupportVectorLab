@@ -32,20 +32,18 @@ ls_tsvm_dual_solver <- function(KernelX, idx, C1, C2) {
 #' @param gamma parameter for \code{'rbf'} and \code{'poly'} kernel. Default \code{gamma = 1/ncol(X)}.
 #' @param degree parameter for polynomial kernel, default: \code{degree = 3}.
 #' @param coef0 parameter for polynomial kernel,  default: \code{coef0 = 0}.
-#' @param solver \code{"dual"} is available.
 #' @param fit_intercept if set \code{fit_intercept = TRUE},
 #'                      the function will evaluates intercept.
-#' @param randx parameter for reduce SVM, default \code{randx = 0.1}.
-#' @param ... unused parameters.
+#' @param reduce_set reduce set for reduce SVM, default \code{reduce_set = NULL}.
 #' @return return \code{TSVMClassifier} object.
 #' @export
-ls_tsvm <- function(X, y, C1 = 1, C2 = C1,
+ls_tsvm <- function(X, y, C1 = 1, C2 = 1,
                     kernel = c("linear", "rbf", "poly"),
                     gamma = 1 / ncol(X), degree = 3, coef0 = 0,
-                    solver = c("dual"), fit_intercept = TRUE,
-                    randx = 1, ...) {
+                    fit_intercept = TRUE, reduce_set = NULL) {
   X <- as.matrix(X)
   y <- as.matrix(y)
+
   class_set <- sort(unique(y))
   idx <- which(y == class_set[1])
   y[idx] <- -1
@@ -54,26 +52,41 @@ ls_tsvm <- function(X, y, C1 = 1, C2 = C1,
   if (length(class_set) > 2) {
     stop("The number of class should less 2!")
   }
+
   kernel <- match.arg(kernel)
-  solver <- match.arg(solver)
-  kso <- kernel_select_option(X, kernel, "primal", randx,
-                              gamma, degree, coef0)
-  KernelX <- kso$KernelX
-  Kw <- kso$KernelX[kso$sample_idx, ]
-  X <- kso$X
+  KernelR <- NULL
+  if (kernel != "linear") {
+    kso <- kernel_select_option_(X, kernel, reduce_set, gamma, degree, coef0)
+    KernelX <- kso$KernelX
+    KernelR <- kso$KernelR
+  } else {
+    KernelX <- X
+  }
+  kxp <- ncol(KernelX)
   if (fit_intercept == TRUE) {
     KernelX <- cbind(KernelX, 1)
   }
-  if (solver == "dual") {
-    solver.res <- ls_tsvm_dual_solver(KernelX, idx, C1, C2)
-  }
-  TSVMClassifier <- list("X" = X, "y" = y, "class_set" = class_set,
-                         "C1" = C1, "C2" = C2, "kernel" = kernel,
-                         "gamma" = gamma, "degree" = degree, "coef0" = coef0,
-                         "solver" = solver, "coef1" = solver.res$coef1,
-                         "coef2" = solver.res$coef2,
-                         "fit_intercept" = fit_intercept,
-                         "Kw" = Kw)
-  class(TSVMClassifier) <- "TSVMClassifier"
+  solver.res <- ls_tsvm_dual_solver(KernelX, idx, C1, C2)
+
+  model_specs = list("X" = X, "y" = y,
+                     "C1" = C1, "C2" = C2,
+                     "fit_intercept" = fit_intercept,
+                     "class_set" = class_set)
+  model_coef = list("coef1" = solver.res$coef1,
+                    "coef2" = solver.res$coef2)
+  kernel_config = list("kernel" = kernel,
+                       "gamma" = gamma,
+                       "degree" = degree,
+                       "coef0" = coef0,
+                       "reduce_set" = reduce_set,
+                       "KernelR" = KernelR,
+                       "KernelX" = KernelX[, 1:kxp, drop = FALSE])
+  w_norm <- get_coef_norm(kernel_config, model_coef)
+  kernel_config$w_norm <- w_norm
+  TSVMClassifier <- structure(
+    list("model_specs" = model_specs,
+         "model_coef" = model_coef,
+         "kernel_config" = kernel_config),
+    "class" = "TSVMClassifier")
   return(TSVMClassifier)
 }

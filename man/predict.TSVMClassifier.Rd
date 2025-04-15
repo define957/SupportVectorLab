@@ -7,7 +7,7 @@
 \method{predict}{TSVMClassifier}(object, X, values = FALSE, ...)
 }
 \arguments{
-\item{object}{a fitted object of class inheriting from \code{SVMClassifier}.}
+\item{object}{a fitted object of class inheriting from \code{TSVMClassifier}.}
 
 \item{X}{new data for predicting.}
 

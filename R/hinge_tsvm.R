@@ -48,21 +48,19 @@ hinge_tsvm_dual_solver <- function(KernelX, idx, C1, C2, eps, max.steps) {
 #' @param coef0 parameter for polynomial kernel,  default: \code{coef0 = 0}.
 #' @param eps the precision of the optimization algorithm.
 #' @param max.steps the number of iterations to solve the optimization problem.
-#' @param solver \code{"dual"} is available.
 #' @param fit_intercept if set \code{fit_intercept = TRUE},
 #'                      the function will evaluates intercept.
-#' @param randx parameter for reduce SVM, default \code{randx = 0.1}.
-#' @param ... unused parameters.
+#' @param reduce_set reduce set for reduce SVM, default \code{reduce_set = NULL}.
 #' @return return \code{TSVMClassifier} object.
 #' @export
-hinge_tsvm <- function(X, y, C1 = 1, C2 = C1,
+hinge_tsvm <- function(X, y, C1 = 1, C2 = 1,
                        kernel = c("linear", "rbf", "poly"),
                        gamma = 1 / ncol(X), degree = 3, coef0 = 0,
                        eps = 1e-5, max.steps = 4000,
-                       solver = c("dual"), fit_intercept = TRUE,
-                       randx = 1, ...) {
+                       fit_intercept = TRUE, reduce_set = NULL) {
   X <- as.matrix(X)
   y <- as.matrix(y)
+
   class_set <- sort(unique(y))
   idx <- which(y == class_set[1])
   y[idx] <- -1
@@ -71,34 +69,49 @@ hinge_tsvm <- function(X, y, C1 = 1, C2 = C1,
   if (length(class_set) > 2) {
     stop("The number of class should less 2!")
   }
+
   kernel <- match.arg(kernel)
-  solver <- match.arg(solver)
-  kso <- kernel_select_option(X, kernel, "primal", randx,
-                              gamma, degree, coef0)
-  KernelX <- kso$KernelX
-  Kw <- kso$KernelX[kso$sample_idx, ]
-  X <- kso$X
+  KernelR <- NULL
+  if (kernel != "linear") {
+    kso <- kernel_select_option_(X, kernel, reduce_set, gamma, degree, coef0)
+    KernelX <- kso$KernelX
+    KernelR <- kso$KernelR
+  } else {
+    KernelX <- X
+  }
+  kxp <- ncol(KernelX)
   if (fit_intercept == TRUE) {
     KernelX <- cbind(KernelX, 1)
   }
-  if (solver == "dual") {
-    solver.res <- hinge_tsvm_dual_solver(KernelX, idx, C1, C2, eps, max.steps)
-  }
-  TSVMClassifier <- list("X" = X, "y" = y, "class_set" = class_set,
-                         "C1" = C1, "C2" = C2, "kernel" = kernel,
-                         "gamma" = gamma, "degree" = degree, "coef0" = coef0,
-                         "solver" = solver, "coef1" = solver.res$coef1,
-                         "coef2" = solver.res$coef2,
-                         "fit_intercept" = fit_intercept,
-                         "Kw" = Kw)
-  class(TSVMClassifier) <- "TSVMClassifier"
+  solver.res <- hinge_tsvm_dual_solver(KernelX, idx, C1, C2, eps, max.steps)
+
+  model_specs = list("X" = X, "y" = y,
+                     "C1" = C1, "C2" = C2,
+                     "fit_intercept" = fit_intercept,
+                     "class_set" = class_set)
+  model_coef = list("coef1" = solver.res$coef1,
+                    "coef2" = solver.res$coef2)
+  kernel_config = list("kernel" = kernel,
+                       "gamma" = gamma,
+                       "degree" = degree,
+                       "coef0" = coef0,
+                       "reduce_set" = reduce_set,
+                       "KernelR" = KernelR,
+                       "KernelX" = KernelX[, 1:kxp, drop = FALSE])
+  w_norm <- get_coef_norm(kernel_config, model_coef)
+  kernel_config$w_norm <- w_norm
+  TSVMClassifier <- structure(
+    list("model_specs" = model_specs,
+         "model_coef" = model_coef,
+         "kernel_config" = kernel_config),
+    "class" = "TSVMClassifier")
   return(TSVMClassifier)
 }
 
 #' Predict Method for Twin Support Vector Machine
 #'
 #' @author Zhang Jiaqi
-#' @param object a fitted object of class inheriting from \code{SVMClassifier}.
+#' @param object a fitted object of class inheriting from \code{TSVMClassifier}.
 #' @param X new data for predicting.
 #' @param values if set \code{values = TRUE}, this function will return predict
 #'               values: f = abs(wx+b).
@@ -107,42 +120,32 @@ hinge_tsvm <- function(X, y, C1 = 1, C2 = C1,
 #' @export
 predict.TSVMClassifier <- function(object, X, values = FALSE, ...) {
   X <- as.matrix(X)
-  if (object$kernel == "linear") {
+  model_specs <- object$model_specs
+  kernel_config <- object$kernel_config
+  model_coef <- object$model_coef
+  reduce_flag <- ifelse(is.null(kernel_config$reduce_set), 0, 1)
+  if (kernel_config$kernel == "linear") {
     KernelX <- X
   } else {
-    KernelX <- kernel_function(X, object$X,
-                               kernel.type = object$kernel,
-                               gamma = object$gamma,
-                               degree = object$degree,
-                               coef0 = object$coef0)
+    if (reduce_flag) { Xmap <- kernel_config$reduce_set } else {Xmap <- model_specs$X}
+    KernelX <- kernel_function(X, Xmap,
+                               kernel.type = kernel_config$kernel,
+                               gamma = kernel_config$gamma,
+                               degree = kernel_config$degree,
+                               coef0 = kernel_config$coef0)
   }
-  xp <- ncol(KernelX)
-  if (object$fit_intercept == TRUE) {
-    KernelXe <- cbind(KernelX, 1)
+  if (model_specs$fit_intercept == TRUE) {
+    KernelX <- cbind(KernelX, 1)
   }
-  f1 <- abs(KernelXe %*% object$coef1)
-  f2 <- abs(KernelXe %*% object$coef2)
-  if (object$kernel == "linear") {
-    norm1 <- norm(object$coef1[1:xp], type = "2")
-    norm2 <- norm(object$coef2[1:xp], type = "2")
-  } else {
-    norm1 <- t(object$coef1[1:xp]) %*% object$Kw %*% object$coef1[1:xp]
-    norm2 <- t(object$coef2[1:xp]) %*% object$Kw %*% object$coef2[1:xp]
-    norm1 <- as.numeric(norm1)
-    norm2 <- as.numeric(norm2)
-  }
-  if (norm1 == 0 || norm2 == 0) {
-    norm1 <- norm1 + 1e-7
-    norm2 <- norm2 + 1e-7
-  }
-  fx1 <- f1 / sqrt(norm1)
-  fx2 <- f2 / sqrt(norm2)
+  w_norm <- kernel_config$w_norm
+  fx1 <- abs(KernelX %*% model_coef$coef1) / w_norm$w1_norm
+  fx2 <- abs(KernelX %*% model_coef$coef2) / w_norm$w2_norm
   if (values == FALSE) {
     decf <- apply(cbind(fx1, fx2), 1, which.min)
     idx_pos <- which(decf == 1)
     idx_neg <- which(decf == 2)
-    decf[idx_pos] <- object$class_set[1]
-    decf[idx_neg] <- object$class_set[2]
+    decf[idx_pos] <- model_specs$class_set[2]
+    decf[idx_neg] <- model_specs$class_set[1]
   } else {
     dec_values1 <- fx1
     dec_values2 <- fx2
@@ -150,7 +153,6 @@ predict.TSVMClassifier <- function(object, X, values = FALSE, ...) {
   }
   return(decf)
 }
-
 
 #' Plot Method for Support Vector Machine
 #'
@@ -161,21 +163,25 @@ predict.TSVMClassifier <- function(object, X, values = FALSE, ...) {
 #' @importFrom graphics abline grid points
 #' @export
 plot.TSVMClassifier <- function(x, ...) {
-  y <- x$y
-  coef1 <- x$coef1
-  coef2 <- x$coef2
-  class_set <- sort(unique(y))
+  model_specs <- x$model_specs
+  model_coef <- x$model_coef
+  kernel_config <- x$kernel_config
+  y <- model_specs$y
+  coef1 <- model_coef$coef1
+  coef2 <- model_coef$coef2
+  class_set <- model_specs$class_set
   idx <- which(y == class_set[1])
   y[idx] <- -1
   y[-idx] <- 1
-  xlim_c <- c(min(x$X[,1]), max(x$X[, 1]))
-  ylim_c <- c(min(x$X[,2]), max(x$X[, 2]))
+  xlim_c <- c(min(model_specs$X[,1]), max(model_specs$X[, 1]))
+  ylim_c <- c(min(model_specs$X[,2]), max(model_specs$X[, 2]))
   if (length(coef1) == 3 && length(coef2) == 3) {
-    plot(x$X[-idx, 1], x$X[-idx, 2], col = "red", xlim = xlim_c, ylim = ylim_c,
+    plot(model_specs$X[idx, 1], model_specs$X[idx, 2], col = "red",
+         xlim = xlim_c, ylim = ylim_c,
          xlab = "", ylab = "")
     grid(10, 10, lwd = 2,col = "grey")
-    points(x$X[idx, 1], x$X[idx, 2], col = "blue")
-    if (x$kernel == "linear") {
+    points(model_specs$X[-idx, 1], model_specs$X[-idx, 2], col = "blue")
+    if (kernel_config$kernel == "linear") {
       abline(a = -coef1[3]/coef1[2], b = -coef1[1]/coef1[2],
              lty = 1, col = "red")
       abline(a = -(coef1[3] + 1)/coef1[2], b = -coef1[1]/coef1[2],

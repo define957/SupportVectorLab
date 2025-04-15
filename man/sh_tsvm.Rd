@@ -8,16 +8,15 @@ sh_tsvm(
   X,
   y,
   C1 = 1,
-  C2 = C1,
+  C2 = 1,
   kernel = c("linear", "rbf", "poly"),
   gamma = 1/ncol(X),
   degree = 3,
   coef0 = 0,
   eps = 1e-05,
   max.steps = 4000,
-  solver = c("dual"),
   fit_intercept = TRUE,
-  randx = 1
+  reduce_set = NULL
 )
 }
 \arguments{
@@ -42,18 +41,16 @@ sh_tsvm(
 
 \item{max.steps}{the number of iterations to solve the optimization problem.}
 
-\item{solver}{\code{"dual"} is available.}
-
 \item{fit_intercept}{if set \code{fit_intercept = TRUE},
 the function will evaluates intercept.}
 
-\item{randx}{parameter for reduce SVM, default \code{randx = 0.1}.}
+\item{reduce_set}{reduce set for reduce SVM, default \code{reduce_set = NULL}.}
 }
 \value{
 return \code{TSVMClassifier} object.
 }
 \description{
-\code{sh_tsvm} is an R implementation of Hinge-TSVM
+\code{sh_tsvm} is an R implementation of SH-TSVM
 }
 \author{
 Zhang Jiaqi.
