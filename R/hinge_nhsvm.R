@@ -159,6 +159,42 @@ predict.NHSVMClassifier <- function(object, X, values = FALSE, ...) {
   return(decf)
 }
 
+#' Plot Method for Nonparallel Hyperplane Support Vector Machine
+#'
+#' @author Zhang Jiaqi
+#' @param x a fitted object of class inheriting from \code{NHSVMClassifier}.
+#' @param ... unused parameter.
+#' @importFrom stats coef
+#' @importFrom graphics abline grid points
+#' @export
+plot.NHSVMClassifier <- function(x, ...) {
+  model_specs <- x$model_specs
+  model_coef <- x$model_coef
+  kernel_config <- x$kernel_config
+  y <- model_specs$y
+  coef1 <- model_coef$coef1
+  coef2 <- model_coef$coef2
+  class_set <- model_specs$class_set
+  idx <- which(y == class_set[1])
+  y[idx] <- -1
+  y[-idx] <- 1
+  xlim_c <- c(min(model_specs$X[,1]), max(model_specs$X[, 1]))
+  ylim_c <- c(min(model_specs$X[,2]), max(model_specs$X[, 2]))
+  if (length(coef1) == 3 && length(coef2) == 3) {
+    plot(model_specs$X[idx, 1], model_specs$X[idx, 2], col = "red",
+         xlim = xlim_c, ylim = ylim_c,
+         xlab = "", ylab = "")
+    grid(10, 10, lwd = 2,col = "grey")
+    points(model_specs$X[-idx, 1], model_specs$X[-idx, 2], col = "blue")
+    if (kernel_config$kernel == "linear") {
+      abline(a = -coef1[3]/coef1[2], b = -coef1[1]/coef1[2],
+             lty = 1, col = "red")
+      abline(a = -coef2[3]/coef2[2], b = -coef2[1]/coef2[2],
+             lty = 1, col = "blue")
+    }
+  }
+}
+
 get_coef_norm <- function(kernel_config, model_coef) {
   reduce_flag <- ifelse(is.null(kernel_config$reduce_set), 0, 1)
   if (kernel_config$kernel != "linear") {
