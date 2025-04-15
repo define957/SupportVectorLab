@@ -14,12 +14,9 @@ hinge_nhsvm(
   degree = 3,
   coef0 = 0,
   eps = 1e-05,
-  max.steps = 80,
-  batch_size = nrow(X)/10,
-  solver = c("dual", "primal"),
+  max.steps = 4000,
   fit_intercept = TRUE,
-  randx = 1,
-  ...
+  reduce_set = NULL
 )
 }
 \arguments{
@@ -44,16 +41,10 @@ hinge_nhsvm(
 
 \item{max.steps}{the number of iterations to solve the optimization problem.}
 
-\item{batch_size}{mini-batch size for primal solver.}
-
-\item{solver}{\code{"dual"} and \code{"primal"} are available.}
-
 \item{fit_intercept}{if set \code{fit_intercept = TRUE},
 the function will evaluates intercept.}
 
-\item{randx}{parameter for reduce SVM, default \code{randx = 0.1}.}
-
-\item{...}{unused parameters.}
+\item{reduce_set}{reduce set for reduce SVM, default \code{reduce_set = NULL}.}
 }
 \value{
 return \code{NHSVMClassifier} object.

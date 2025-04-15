@@ -2,12 +2,12 @@
 % Please edit documentation in R/hinge_nhsvm.R
 \name{predict.NHSVMClassifier}
 \alias{predict.NHSVMClassifier}
-\title{Predict Method for Twin Support Vector Machine}
+\title{Predict Method for Nonparallel Hyperplane Support Vector Machine}
 \usage{
 \method{predict}{NHSVMClassifier}(object, X, values = FALSE, ...)
 }
 \arguments{
-\item{object}{a fitted object of class inheriting from \code{SVMClassifier}.}
+\item{object}{a fitted object of class inheriting from \code{NHSVMClassifier}.}
 
 \item{X}{new data for predicting.}
 
@@ -17,7 +17,7 @@ values: f = abs(wx+b).}
 \item{...}{unused parameter.}
 }
 \description{
-Predict Method for Twin Support Vector Machine
+Predict Method for Nonparallel Hyperplane Support Vector Machine
 }
 \author{
 Zhang Jiaqi
