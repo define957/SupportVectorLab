@@ -1,6 +1,6 @@
 sh_tsvm_dual_solver <- function(KernelX, idx, C1, C2, eps, max.steps) {
-  H <- KernelX[idx, ]
-  G <- KernelX[-idx, ]
+  H <- KernelX[-idx, ]
+  G <- KernelX[idx, ]
   xn <- nrow(KernelX)
   xp <- ncol(KernelX)
   Hn <- nrow(H)
