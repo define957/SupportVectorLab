@@ -18,7 +18,7 @@ ls_tsvm_dual_solver <- function(KernelX, idx, C1, C2) {
 
 #' Least Squares Twin Support Vector Machine
 #'
-#' \code{ls_tsvm} is an R implementation of Hinge-TSVM
+#' \code{ls_tsvm} is an R implementation of LS-TSVM
 #'
 #' @author Zhang Jiaqi.
 #' @param X,y dataset and label.

@@ -50,7 +50,7 @@ the function will evaluates intercept.}
 return \code{TSVMClassifier} object.
 }
 \description{
-\code{ls_tsvm} is an R implementation of Hinge-TSVM
+\code{ls_tsvm} is an R implementation of LS-TSVM
 }
 \author{
 Zhang Jiaqi.
