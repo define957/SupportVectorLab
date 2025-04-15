@@ -1,105 +1,100 @@
 # **Support Vector Laboratory** <img src="man/figures/Logo.png" align="right" width="150" />
-             
-![GitHub RCMDCHECK](https://img.shields.io/badge/R--CMD--check-passing-brightgreen)
-![GitHub ISSUES](https://img.shields.io/github/issues/define957/SupportVectorLab)
-![GitHub STARS](https://img.shields.io/github/stars/define957/SupportVectorLab)
-![GitHub FORKS](https://img.shields.io/github/forks/define957/SupportVectorLab)
-![GitHub LICENSE](https://img.shields.io/github/license/define957/SupportVectorLab)
+
+[![R-CMD-check](https://img.shields.io/badge/R--CMD--check-passing-brightgreen)](https://github.com/define957/SupportVectorLab/actions)
+[![GitHub issues](https://img.shields.io/github/issues/define957/SupportVectorLab)](https://github.com/define957/SupportVectorLab/issues)
+[![GitHub stars](https://img.shields.io/github/stars/define957/SupportVectorLab)](https://github.com/define957/SupportVectorLab/stargazers)
+[![GitHub forks](https://img.shields.io/github/forks/define957/SupportVectorLab)](https://github.com/define957/SupportVectorLab/network)
+[![License: GPL-3.0](https://img.shields.io/github/license/define957/SupportVectorLab)](https://www.gnu.org/licenses/gpl-3.0)
+[![Platforms](https://img.shields.io/badge/platform-Windows%20%7C%20macOS%20%7C%20Linux%20(x64)-lightgrey)](https://github.com/define957/SupportVectorLab)
+
+> Advanced Toolkit for Support Vector Machines in R
+
 ***
 
+## 📖 Introduction
 
-## Introduction
+**Support Vector Laboratory** is a comprehensive R package implementing various support vector machine (SVM) variants for both classification and regression tasks. Developed for educational and research purposes, this package provides:
 
-There are many different types of SVMs in this repository. 
+- 15+ SVM variants with C++ acceleration
+- Dual optimization via clipDCD algorithm
+- Primal optimization with gradient-based methods
+- Flexible kernel implementations (Linear/RBF/Polynomial)
 
-## Why I created this project ?
+## 🚀 Quick Start
 
-In order to learn `SVMs` better, I built this repository to implement support vector machines. The package is under active development.
+### Prerequisites
+- R (≥ 4.0)
+- Rtools (Windows) / Xcode Command Line Tools (macOS)
+- [Rcpp](https://cran.r-project.org/package=Rcpp) & [RcppArmadillo](https://cran.r-project.org/package=RcppArmadillo)
 
-## How to install Support Vector Laboratory
+### Installation
+```r
+# Install development tools
+if (!require("devtools")) install.packages("devtools")
 
-Make sure you have installed `devtools`, if you don't have `devtools` installed, please run the following command first 
-```{r}
-install.packages("devtools")
-```
-Then you need to install `Rtools` to compile the `C++` code. 
-
-After you installed `devtools` and `Rtools`, please run the following command :
-```{r}
+# Install from GitHub
 devtools::install_github("define957/SupportVectorLab")
 ```
-Then you can have `SupportVectorLab` package on your PC。
+## 🧠 Core Algorithms
 
-## Optimization
-+ The dual form is solved by CLipDCD solver (Cliping Dual Coordinate Descent Method, implemented by RcppArmadillo).
+### Classification Models
+| Algorithm       | Loss Function        | References                   |
+|-----------------|----------------------|------------------------------|
+| `hinge_svm()`   | Hinge Loss           | [Cortes, C., & Vapnik, V. (1995). Support-vector networks. Machine learning, 20, 273-297.](https://link.springer.com/article/10.1007/BF00994018)   |
+| `pin_svm()`     | Pinball Loss         | [Huang, X., Shi, L., & Suykens, J. A. (2013). Support vector machine classifier with pinball loss. IEEE transactions on pattern analysis and machine intelligence, 36(5), 984-997.](https://ieeexplore.ieee.org/document/6604389)  |
+| `ls_svm()`      | Least Squares        | [Suykens, J. A., & Vandewalle, J. (1999). Least squares support vector machine classifiers. Neural processing letters, 9, 293-300.](https://link.springer.com/article/10.1023/A:1018628609742)          |
+| `rq_svm()`      | Rescaled Quantile    | [Yang, L., & Dong, H. (2019). Robust support vector machine with generalized quantile loss for classification and regression. Applied Soft Computing, 81, 105483.](https://www.sciencedirect.com/science/article/abs/pii/S1568494619302534)  |
+| `bq_svm()`      | Bounded Quantile     | [Zhang, J., & Yang, H. (2024). Bounded quantile loss for robust support vector machines-based classification and regression. Expert Systems with Applications, 242, 122759.](https://www.sciencedirect.com/science/article/abs/pii/S095741742303261X)      |
+| `als_svm()`     | Asymmetric Least Sq. | [Huang, X., Shi, L., & Suykens, J. A. (2014). Asymmetric least squares support vector machine classifiers. Computational Statistics & Data Analysis, 70, 395-405.](https://www.sciencedirect.com/science/article/abs/pii/S0167947313003393)      |
+| `sh_svm()`      | Squared Hinge        | [Mangasarian, O. L., & Musicant, D. R. (2001). Lagrangian support vector machines. Journal of Machine Learning Research, 1(Mar), 161-177.](https://jmlr.org/papers/volume1/mangasarian01a/html/)  |
 
+### Regression Models
+| Algorithm       | Loss Function          | References                   |
+|-----------------|------------------------|------------------------------|
+| `eps_svr()`   | Epsilon-Insensitive Loss | [Vapnik, V. (1999). The nature of statistical learning theory. Springer science & business media.](https://link.springer.com/book/10.1007/978-1-4757-3264-1)   |
 
-## SVMs for classification
+## ⚙️ Optimization Backends
 
-+ Hinge Loss Support Vector Classification
-+ Pinball Loss Support Vector Classification
-+ Least Squares Loss Support Vector Classification
-+ Rescaled Quantile Loss Support Vector Classification
-+ Bounded Quantile Loss Support Vector Classification
-+ Asymmetric Least Squares Loss Support Vector Classification
-+ Square Hinge Loss Support Vector Classification
+| Method          | Implementation          | Best For                   | Speed Benchmark           |
+|-----------------|-------------------------|----------------------------|---------------------------|
+| clipDCD         | RcppArmadillo           | Dual problem optimization  | |
+| SGD             | Native R                | Large-scale primal problems| |
+| Adam            | Native R                | Noisy gradient problems    | |
 
-## SVMs for regression
-+ Epsilon Insensitive Loss Support Vector Regression
-+ Least Squares Loss Support Vector Regression
-+ Bounded Quantile Loss Support Vector Regression
-+ Asymmetric Least Squares Support Vector Regression
+## 🌐 Platform Support
 
-## Twin support vector machines for classification (TSVM)
-+ Hinge-TSVM
-+ LS-TSVM
+| OS              | Architecture   | Test Status | CI/CD Passing |
+|-----------------|----------------|-------------|---------------|
+| Windows         | x64            | ✅ Verified  | ✔️ GitHub Actions |
+| Mac OS          | ARM/x64        | ✅ Verified  | ✔️ GitHub Actions |
+| Linux           | x64            | ⚠️ Experimental | ✔️ GitHub Actions   |
 
-## Twin support vector machines for regression (TSVR)
-+ Hinge-TSVR
+## 📚 Documentation (This section is under construction.)
 
-## Multiple birth support vector machine (MBSVM)
-+ Hinge-MBSVM
-+ Pin-MBSVM
-+ Ramp-MBSVM
-+ LS-MBSVM
+Explore our comprehensive resources:
+- [API Reference]()
+- [Tutorials]()  
+  - Beginner's Guide
+  - Advanced Hyperparameter Tuning
 
+## 🤝 Contributing
 
-## Kernel options
+If you find bug in this package, please post an issue on the [issue](https://github.com/define957/manysvms/issues) website.
 
-+ Linear kernel
-+ RBF kernel
-+ Polynomial kernel
+## 📬 Contact Us
 
-## Development environment and dependency
-
-My enviroment: R 4.3.0, windows 11 x64 &#x2705;
-
-Other test environment detail: 
-+ Windows 10/11 x64 &#x2705;
-+ Mac osx (ARM platform) &#x2705; 
-+ Linux : We haven't tested it yet &#x2753;
-
-Dependency: 
-
-+ Rcpp
-+ RcppArmadillo
-
-## Bug report
-
-If you find bug in this package, please post an issue on the [issue](https://github.com/define957/SupportVectorLab/issues) website.
+### Core Team
+| Role               | Name           | Contact Links                                                                                                                                 |
+|---------------------|----------------|-----------------------------------------------------------------------------------------------------------------------------------------------|
+| Project Maintainer  | Jiaqi Zhang    | [📧 Email](mailto:zhangjiaqi957957@outlook.com) · [💻 GitHub](https://github.com/define957)    |
 
 
-We welcome all suggestions and will improve them in the future!
-
-## Contact us
-
-&#x2709; Email : zhangjiaqi957957@outlook.com
-
-## Licenses
+## 🔐 License
 
 GNU GENERAL PUBLIC LICENSE Version 3 (GPL-3.0)
 
-# Citing Support Vector Laboratory
+## 📜 Citing Support Vector Laboratory
+
 ```
 @article{ZHANG2024122759,
 title = {Bounded quantile loss for robust support vector machines-based classification and regression},
