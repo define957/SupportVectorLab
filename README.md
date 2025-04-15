@@ -53,6 +53,15 @@ devtools::install_github("define957/SupportVectorLab")
 |-----------------|------------------------|------------------------------|
 | `eps_svr()`   | Epsilon-Insensitive Loss | [Vapnik, V. (1999). The nature of statistical learning theory. Springer science & business media.](https://link.springer.com/book/10.1007/978-1-4757-3264-1)   |
 
+## Advanced Models
+
+### Nonparallel Hyperplane Support Vector Machine
+
+| Algorithm       | Loss Function          | References                   |
+|-----------------|------------------------|------------------------------|
+| `hinge_nhsvm()` | Hinge Loss             | [Shao, Y. H., Chen, W. J., & Deng, N. Y. (2014). Nonparallel hyperplane support vector machine for binary classification problems. Information Sciences, 263, 22-35.](https://www.sciencedirect.com/science/article/abs/pii/S0020025513007883)   |
+
+
 ## ⚙️ Optimization Backends
 
 | Method          | Implementation          | Best For                   | Speed Benchmark           |
