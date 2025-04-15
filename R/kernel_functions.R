@@ -54,6 +54,7 @@ kernel_function <- function(x1, x2,
 kernel_select_option_ <- function(X, kernel, reduce_set = NULL,
                                   gamma, degree, coef0) {
   n <- nrow(X)
+  KernelR <- NULL
   if (is.null(reduce_set)) {
     # Full kernel matrix
     KernelX <- kernel_function(X, X,
@@ -65,8 +66,12 @@ kernel_select_option_ <- function(X, kernel, reduce_set = NULL,
                                kernel.type = kernel,
                                gamma = gamma, degree = degree, coef0 = coef0,
                                symmetric = FALSE)
+    KernelR <- kernel_function(reduce_set, reduce_set,
+                               kernel.type = kernel,
+                               gamma = gamma, degree = degree, coef0 = coef0,
+                               symmetric = TRUE)
   }
-  K <- list("ReduceX" = reduce_set, "KernelX" = KernelX)
+  K <- list("ReduceX" = reduce_set, "KernelX" = KernelX, "KernelR" = KernelR)
   return(K)
 }
 
