@@ -47,6 +47,8 @@ devtools::install_github("define957/SupportVectorLab")
 | `bq_svm()`      | Bounded Quantile     | [Zhang, J., & Yang, H. (2024). Bounded quantile loss for robust support vector machines-based classification and regression. Expert Systems with Applications, 242, 122759.](https://www.sciencedirect.com/science/article/abs/pii/S095741742303261X)      |
 | `als_svm()`     | Asymmetric Least Sq. | [Huang, X., Shi, L., & Suykens, J. A. (2014). Asymmetric least squares support vector machine classifiers. Computational Statistics & Data Analysis, 70, 395-405.](https://www.sciencedirect.com/science/article/abs/pii/S0167947313003393)      |
 | `sh_svm()`      | Squared Hinge        | [Mangasarian, O. L., & Musicant, D. R. (2001). Lagrangian support vector machines. Journal of Machine Learning Research, 1(Mar), 161-177.](https://jmlr.org/papers/volume1/mangasarian01a/html/)  |
+| `en_svm()`      | Elastic Net          | [Qi, K., Yang, H., Hu, Q., & Yang, D. (2019). A new adaptive weighted imbalanced data classifier via improved support vector machines with high-dimension nature. Knowledge-Based Systems, 185, 104933.](https://www.sciencedirect.com/science/article/pii/S0950705119303764)  |
+
 
 ### Regression Models
 | Algorithm       | Loss Function          | References                   |
@@ -54,6 +56,11 @@ devtools::install_github("define957/SupportVectorLab")
 | `eps_svr()`   | Epsilon-Insensitive Loss | [Vapnik, V. (1999). The nature of statistical learning theory. Springer science & business media.](https://link.springer.com/book/10.1007/978-1-4757-3264-1)   |
 
 ## Advanced Models
+### Twin Support Vector Machine
+| Algorithm       | Loss Function          | References                   |
+|-----------------|------------------------|------------------------------|
+| `hinge_tsvm()`  | Hinge Loss             | [Khemchandani, R., & Chandra, S. (2007). Twin support vector machines for pattern classification. IEEE Transactions on pattern analysis and machine intelligence, 29(5), 905-910.](https://www.sciencedirect.com/science/article/abs/pii/S0925231218302923)   |
+| `ls_tsvm()`     | Least Squares          | [Kumar, M. A., & Gopal, M. (2009). Least squares twin support vector machines for pattern classification. Expert systems with applications, 36(4), 7535-7543.](https://www.sciencedirect.com/science/article/abs/pii/S0957417408006854)   |
 
 ### Nonparallel Hyperplane Support Vector Machine
 
