@@ -82,7 +82,7 @@ devtools::install_github("define957/SupportVectorLab")
 | OS              | Architecture   | Test Status | CI/CD Passing |
 |-----------------|----------------|-------------|---------------|
 | Windows         | x64            | ✅ Verified  | ✔️ GitHub Actions |
-| Mac OS          | ARM/x64        | ✅ Verified  | ✔️ GitHub Actions |
+| macOS           | ARM/x64        | ✅ Verified  | ✔️ GitHub Actions |
 | Linux           | x64            | ⚠️ Experimental | ✔️ GitHub Actions   |
 
 ## 📚 Documentation (This section is under construction.)
