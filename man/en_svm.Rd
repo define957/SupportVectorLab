@@ -50,7 +50,7 @@ the function will evaluates intercept.}
 return \code{SVMClassifier} object.
 }
 \description{
-\code{hinge_svm} is an R implementation of Hinge-SVM
+\code{en_svm} is an R implementation of EN-SVM
 }
 \author{
 Zhang Jiaqi.

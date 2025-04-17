@@ -24,7 +24,7 @@ en_svm_dual_solver <- function(KernelX, y, C1, C2, eps, max.steps) {
 
 #' Hinge Support Vector Machine
 #'
-#' \code{hinge_svm} is an R implementation of Hinge-SVM
+#' \code{en_svm} is an R implementation of EN-SVM
 #'
 #' @author Zhang Jiaqi.
 #' @param X,y dataset and label.
