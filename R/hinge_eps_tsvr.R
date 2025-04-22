@@ -11,7 +11,11 @@ hinge_eps_tsvr_dual_solver <- function(KernelX, y, C1, C2, C3, C4, epsilon1, eps
     GTG_C4_inv_GT <- cholsolve(GramG + diag(C4, xp), t(G))
     dualH2 <- G %*% GTG_C4_inv_GT
   } else {
+<<<<<<< HEAD
     GTG_C4_inv_GT <- GTG_C3_inv_GT
+=======
+    GTG_C4_inv_G <- GTG_C3_inv_GT
+>>>>>>> 32ef8dede79d8613feee5e0a870e5fffe3a09b68
     dualH2 <- dualH1
   }
   q1 <- dualH1 %*% y - y - epsilon1
@@ -29,8 +33,13 @@ hinge_eps_tsvr_dual_solver <- function(KernelX, y, C1, C2, C3, C4, epsilon1, eps
   u1 <- GTG_C3_inv_GT %*% (y - alphas)
   u2 <- GTG_C4_inv_GT %*% (y + gammas)
 
+<<<<<<< HEAD
   BaseDualHingeEPSTSVRRegressor <- list("coef1" = as.matrix(u1),
                                         "coef2" = as.matrix(u2))
+=======
+  BaseDualHingeEPSTWSVRRegressor <- list("coef1" = as.matrix(u1),
+                                         "coef2" = as.matrix(u2))
+>>>>>>> 32ef8dede79d8613feee5e0a870e5fffe3a09b68
 }
 
 #' Hinge Epsilon Twin Support Vector Regression
