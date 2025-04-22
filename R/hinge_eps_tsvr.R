@@ -1,13 +1,21 @@
-hinge_eps_tsvr_dual_solver <- function(KernelX, y, C1, C2, epsilon1, epsilon2,
-                                   eps, max.steps) {
+hinge_eps_tsvr_dual_solver <- function(KernelX, y, C1, C2, C3, C4, epsilon1, epsilon2,
+                                       eps, max.steps) {
   xn <- nrow(KernelX)
   xp <- ncol(KernelX)
   G <- KernelX
-  GTG_inv_G <- cholsolve(t(G) %*% G + diag(1e-7, xp), t(G))
-  dualH <- G %*% GTG_inv_G
+  GramG <- t(G) %*% G
+  GTG_C3_inv_GT <- cholsolve(GramG + diag(C3, xp), t(G))
+  dualH1 <- G %*% GTG_C3_inv_GT
 
-  q1 <- dualH %*% y - y - epsilon1
-  q2 <- y - epsilon2 - dualH %*% y
+  if (C3 != C4) {
+    GTG_C4_inv_GT <- cholsolve(GramG + diag(C4, xp), t(G))
+    dualH2 <- G %*% GTG_C4_inv_GT
+  } else {
+    GTG_C4_inv_G <- GTG_C3_inv_GT
+    dualH2 <- dualH1
+  }
+  q1 <- dualH1 %*% y - y - epsilon1
+  q2 <- y - epsilon2 - dualH2 %*% y
 
   lb <- matrix(0, xn, 1)
   ub1 <- matrix(C1, xn, 1)
@@ -15,16 +23,14 @@ hinge_eps_tsvr_dual_solver <- function(KernelX, y, C1, C2, epsilon1, epsilon2,
 
   x0 <- lb
 
-  alphas <- clip_dcd_optimizer(dualH, q1, lb, ub1, eps, max.steps, x0)$x
-  gammas <- clip_dcd_optimizer(dualH, q2, lb, ub2, eps, max.steps, x0)$x
+  alphas <- clip_dcd_optimizer(dualH1, q1, lb, ub1, eps, max.steps, x0)$x
+  gammas <- clip_dcd_optimizer(dualH2, q2, lb, ub2, eps, max.steps, x0)$x
 
-  u1 <- GTG_inv_G %*% (y - alphas)
-  u2 <- GTG_inv_G %*% (y + gammas)
+  u1 <- GTG_C3_inv_GT %*% (y - alphas)
+  u2 <- GTG_C4_inv_GT %*% (y + gammas)
 
   BaseDualHingeEPSTWSVRRegressor <- list("coef1" = as.matrix(u1),
-                                     "coef2" = as.matrix(u2),
-                                     "lag1" = alphas,
-                                     "lag2" = gammas)
+                                         "coef2" = as.matrix(u2))
 }
 
 #' Hinge Epsilon Twin Support Vector Regression
@@ -33,7 +39,8 @@ hinge_eps_tsvr_dual_solver <- function(KernelX, y, C1, C2, epsilon1, epsilon2,
 #'
 #' @author Zhang Jiaqi.
 #' @param X,y dataset and label.
-#' @param C1,C2 plenty term.
+#' @param C1,C2 weight of loss term.
+#' @param C3,C4 weight of regularization term.
 #' @param epsilon1,epsilon2 parameter for epsilon tube.
 #' @param kernel kernel function. The definitions of various kernel functions are as follows:
 #' \describe{
@@ -51,7 +58,7 @@ hinge_eps_tsvr_dual_solver <- function(KernelX, y, C1, C2, epsilon1, epsilon2,
 #' @param reduce_set reduce set for reduce SVM, default \code{reduce_set = NULL}.
 #' @return return \code{TSVRClassifier} object.
 #' @export
-hinge_eps_tsvr <- function(X, y, C1 = 1, C2 = C1,
+hinge_eps_tsvr <- function(X, y, C1 = 1, C2 = C1, C3 = 1, C4 = C3,
                        epsilon1 = 0.1, epsilon2 = epsilon1,
                        kernel = c("linear", "rbf", "poly"),
                        gamma = 1 / ncol(X), degree = 3, coef0 = 0,
@@ -69,7 +76,7 @@ hinge_eps_tsvr <- function(X, y, C1 = 1, C2 = C1,
   if (fit_intercept == TRUE) {
     KernelX <- cbind(KernelX, 1)
   }
-  solver.res <- hinge_eps_tsvr_dual_solver(KernelX, y, C1, C2, epsilon1, epsilon2,
+  solver.res <- hinge_eps_tsvr_dual_solver(KernelX, y, C1, C2, C3, C4, epsilon1, epsilon2,
                                            eps, max.steps)
   EPSTWSVRRegressor <- list("X" = X, "y" = y,
                          "C1" = C1, "C2" = C2,
@@ -123,14 +130,10 @@ plot.EPSTWSVRRegressor <- function(x, ...) {
   xp <- ncol(x$X)
   xlim_c <- c(min(x$X[,1]), max(x$X[, 1]))
   ylim_c <- c(min(x$y), max(x$y))
-  idx1sv <- which(x$solver.res$lag1 != 0)
-  idx2sv <- which(x$solver.res$lag2 != 0)
-  idxsv <- union(idx1sv, idx2sv)
   if (xp == 1) {
     plot(x$X, x$y, xlim = xlim_c, ylim = ylim_c,
          xlab = "x", ylab = "y")
     grid(lwd = 2,col = "grey")
-    points(x$X[idxsv], x$y[idxsv], col = "red")
     abline(x$coef1[2], x$coef1[1], col = "blue")
     abline(x$coef1[2] - x$epsilon1, x$coef1[1], col = "blue", lty = 2)
     abline(x$coef2[2], x$coef2[1], col = "blue")
