@@ -48,7 +48,7 @@ devtools::install_github("define957/SupportVectorLab")
 | `als_svm()`     | Asymmetric Least Sq. | [Huang, X., Shi, L., & Suykens, J. A. (2014). Asymmetric least squares support vector machine classifiers. Computational Statistics & Data Analysis, 70, 395-405.](https://www.sciencedirect.com/science/article/abs/pii/S0167947313003393)      |
 | `sh_svm()`      | Squared Hinge        | [Mangasarian, O. L., & Musicant, D. R. (2001). Lagrangian support vector machines. Journal of Machine Learning Research, 1(Mar), 161-177.](https://jmlr.org/papers/volume1/mangasarian01a/html/)  |
 | `en_svm()`      | Elastic Net          | [Qi, K., Yang, H., Hu, Q., & Yang, D. (2019). A new adaptive weighted imbalanced data classifier via improved support vector machines with high-dimension nature. Knowledge-Based Systems, 185, 104933.](https://www.sciencedirect.com/science/article/pii/S0950705119303764)  |
-
+| `bals_svm()`    | Bounded ALS          | [Zhang, J., Yang, H. (2025). Robust support vector machine based on the bounded asymmetric least squares loss function and its applications in noise corrupted data. Advanced Engineering Informatics, 65, 103371.](https://www.sciencedirect.com/science/article/abs/pii/S1474034625002642)  |
 
 ### Regression Models
 | Algorithm       | Loss Function          | References                   |
@@ -122,5 +122,20 @@ issn = {0957-4174},
 doi = {https://doi.org/10.1016/j.eswa.2023.122759},
 url = {https://www.sciencedirect.com/science/article/pii/S095741742303261X},
 author = {Jiaqi Zhang and Hu Yang},
+}
+```
+
+```
+@article{ZHANG2025103371,
+title = {Robust support vector machine based on the bounded asymmetric least squares loss function and its applications in noise corrupted data},
+journal = {Advanced Engineering Informatics},
+volume = {65},
+pages = {103371},
+year = {2025},
+issn = {1474-0346},
+doi = {https://doi.org/10.1016/j.aei.2025.103371},
+url = {https://www.sciencedirect.com/science/article/pii/S1474034625002642},
+author = {Jiaqi Zhang and Hu Yang},
+keywords = {Bounded asymmetric least squares loss function, Half-quadratic optimization, Robustness, Binary classification, Regression}
 }
 ```
