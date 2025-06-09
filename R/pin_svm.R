@@ -17,9 +17,11 @@ pin_svm_dual_solver <- function(KernelX, y, C, tau,
                                        "ub" = ub,
                                        "u" = u0),
                                   dual_optimizer_option)
-  u <- do.call("dual_optimizer", dual_optimizer_option)$x
-  coef <- y*u
-  BaseDualPinSVMClassifier <- list(coef = as.matrix(coef))
+  solver.info <- do.call("dual_optimizer", dual_optimizer_option)
+  alphas <- solver.info$x
+  coef <- y*alphas
+  BaseDualPinSVMClassifier <- list(coef = as.matrix(coef),
+                                   "solver.info" = solver.info)
   class(BaseDualPinSVMClassifier) <- "BaseDualPinSVMClassifier"
   return(BaseDualPinSVMClassifier)
 }

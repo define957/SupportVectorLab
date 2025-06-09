@@ -17,9 +17,11 @@ als_svm_dual_solver <- function(KernelX, y, C, p,
                                        "ub" = ub,
                                        "u" = u0),
                                   dual_optimizer_option)
-  u <- do.call("dual_optimizer", dual_optimizer_option)$x
+  solver.info <- do.call("dual_optimizer", dual_optimizer_option)
+  u <- solver.info$x
   coef <- y*(u[1:n] - u[(n + 1):(2*n)])
-  BaseDualALSSVMClassifier <- list(coef = as.matrix(coef))
+  BaseDualALSSVMClassifier <- list(coef = as.matrix(coef),
+                                   "solver.info" = solver.info)
   class(BaseDualALSSVMClassifier) <- "BaseDualALSSVMClassifier"
   return(BaseDualALSSVMClassifier)
 }
@@ -118,8 +120,8 @@ als_svm <- function(X, y, C = 1, kernel = c("linear", "rbf", "poly"),
                                         max.steps, batch_size,
                                         optimizer, ...)
   } else if (solver == "dual") {
-    solver.res <- als_svm_dual_solver(KernelX, y, C,
-                                      p, eps, max.steps)
+    solver.res <- als_svm_dual_solver(KernelX, y, C, p,
+                                      dual_optimizer, dual_optimizer_option)
   }
   SVMClassifier <- list("X" = X, "y" = y,
                         "reduce_flag" = reduce_flag,

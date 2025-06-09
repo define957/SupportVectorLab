@@ -12,10 +12,11 @@ hinge_svm_dual_solver <- function(KernelX, y, C,
                                        "ub" = ub,
                                        "u" = u0),
                                   dual_optimizer_option)
-  alphas <- do.call("dual_optimizer", dual_optimizer_option)$x
-  # alphas <- clip_dcd_optimizer(H, e, lb, ub, eps, max.steps, u0)$x
+  solver.info <- do.call("dual_optimizer", dual_optimizer_option)
+  alphas <- solver.info$x
   coef <- y*alphas
-  BaseDualHingeSVMClassifier <- list(coef = as.matrix(coef))
+  BaseDualHingeSVMClassifier <- list(coef = as.matrix(coef),
+                                     "solver.info" = solver.info)
   class(BaseDualHingeSVMClassifier) <- "BaseDualHingeSVMClassifier"
   return(BaseDualHingeSVMClassifier)
 }

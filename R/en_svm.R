@@ -21,9 +21,11 @@ en_svm_dual_solver <- function(KernelX, y, C1, C2,
                                        "ub" = ub,
                                        "u" = u0),
                                   dual_optimizer_option)
-  u <- do.call("dual_optimizer", dual_optimizer_option)$x
-  coef <- y * u[1:n]
-  BaseDualENSVMClassifier <- list(coef = as.matrix(coef))
+  solver.info <- do.call("dual_optimizer", dual_optimizer_option)
+  alphas <- solver.info$x
+  coef <- y * alphas[1:n]
+  BaseDualENSVMClassifier <- list(coef = as.matrix(coef),
+                                  "solver.info" = solver.info)
   class(BaseDualENSVMClassifier) <- "BaseDualENSVMClassifier"
   return(BaseDualENSVMClassifier)
 }
