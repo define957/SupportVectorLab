@@ -16,6 +16,9 @@ en_svm(
   eps = 1e-05,
   max.steps = 4000,
   fit_intercept = TRUE,
+  reduce_set = NULL,
+  dual_optimizer = clip_dcd_optimizer,
+  dual_optimizer_option = NULL,
   ...
 )
 }
@@ -43,6 +46,12 @@ en_svm(
 
 \item{fit_intercept}{if set \code{fit_intercept = TRUE},
 the function will evaluates intercept.}
+
+\item{reduce_set}{reduce set for reduce SVM, default \code{reduce_set = NULL}.}
+
+\item{dual_optimizer}{default optimizer is \code{clip_dcd_optimizer}.}
+
+\item{dual_optimizer_option}{optimizer options.}
 
 \item{...}{unused parameters.}
 }

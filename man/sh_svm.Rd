@@ -13,12 +13,14 @@ sh_svm(
   degree = 3,
   coef0 = 0,
   eps = 1e-05,
-  max.steps = 80,
+  max.steps = 4000,
   batch_size = nrow(X)/10,
   solver = c("dual", "primal"),
   fit_intercept = TRUE,
   optimizer = pegasos,
-  randx = 0.1,
+  reduce_set = NULL,
+  dual_optimizer = clip_dcd_optimizer,
+  dual_optimizer_option = NULL,
   ...
 )
 }
@@ -53,7 +55,11 @@ the function will evaluates intercept.}
 
 \item{optimizer}{default primal optimizer pegasos.}
 
-\item{randx}{parameter for reduce SVM, default \code{randx = 0.1}.}
+\item{reduce_set}{reduce set for reduce SVM, default \code{reduce_set = NULL}.}
+
+\item{dual_optimizer}{default optimizer is \code{clip_dcd_optimizer}.}
+
+\item{dual_optimizer_option}{optimizer options.}
 
 \item{...}{unused parameters.}
 }

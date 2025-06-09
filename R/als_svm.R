@@ -1,5 +1,5 @@
-als_svm_dual_solver <- function(KernelX, y, C = 1, p = 0.5,
-                                eps = 1e-5, max.steps = 4000) {
+als_svm_dual_solver <- function(KernelX, y, C, p,
+                                dual_optimizer, dual_optimizer_option) {
   n <- nrow(KernelX)
   H <- calculate_svm_H(KernelX, y)
   H <- cbind(H, -H)
@@ -11,7 +11,13 @@ als_svm_dual_solver <- function(KernelX, y, C = 1, p = 0.5,
   lb <- matrix(0, nrow = 2*n)
   ub <- matrix(Inf, nrow = 2*n)
   u0 <- lb
-  u <- clip_dcd_optimizer(H, q, lb, ub, eps, max.steps, u0)$x
+  dual_optimizer_option <- append(list("H" = H,
+                                       "q" = q,
+                                       "lb" = lb,
+                                       "ub" = ub,
+                                       "u" = u0),
+                                  dual_optimizer_option)
+  u <- do.call("dual_optimizer", dual_optimizer_option)$x
   coef <- y*(u[1:n] - u[(n + 1):(2*n)])
   BaseDualALSSVMClassifier <- list(coef = as.matrix(coef))
   class(BaseDualALSSVMClassifier) <- "BaseDualALSSVMClassifier"
@@ -20,8 +26,8 @@ als_svm_dual_solver <- function(KernelX, y, C = 1, p = 0.5,
 
 
 als_svm_primal_solver <- function(KernelX, y, C = 1, p = 0.5,
-                                 max.steps = 80, batch_size = nrow(KernelX) / 10,
-                                 optimizer = pegasos, ...) {
+                                  max.steps = 80, batch_size = nrow(KernelX) / 10,
+                                  optimizer = pegasos, ...) {
   gLeastSquares <- function(KernelX, y, w, pars,...) { # gradient of Least Squares loss function
     C <- pars$C
     xn <- pars$xn
@@ -70,7 +76,9 @@ als_svm_primal_solver <- function(KernelX, y, C = 1, p = 0.5,
 #' @param fit_intercept if set \code{fit_intercept = TRUE},
 #'                      the function will evaluates intercept.
 #' @param optimizer default primal optimizer pegasos.
-#' @param randx parameter for reduce SVM, default \code{randx = 0.1}.
+#' @param reduce_set reduce set for reduce SVM, default \code{reduce_set = NULL}.
+#' @param dual_optimizer default optimizer is \code{clip_dcd_optimizer}.
+#' @param dual_optimizer_option optimizer options.
 #' @param ... unused parameters.
 #' @return return \code{SVMClassifier} object.
 #' @export
@@ -79,7 +87,9 @@ als_svm <- function(X, y, C = 1, kernel = c("linear", "rbf", "poly"),
                     p = 0.5,
                     eps = 1e-5, max.steps = 4000, batch_size = nrow(X) / 10,
                     solver = c("dual", "primal"),
-                    fit_intercept = TRUE, optimizer = pegasos, randx = 0.1, ...) {
+                    fit_intercept = TRUE, optimizer = pegasos,
+                    reduce_set = NULL, dual_optimizer = clip_dcd_optimizer,
+                    dual_optimizer_option = NULL, ...) {
   X <- as.matrix(X)
   y <- as.matrix(y)
   class_set <- sort(unique(y))
@@ -90,31 +100,36 @@ als_svm <- function(X, y, C = 1, kernel = c("linear", "rbf", "poly"),
   if (length(class_set) > 2) {
     stop("The number of class should less 2!")
   }
-  if (p >= 1 || p <= 0) {
-    stop("Parameter p should satisfy 0 < p < 1")
-  }
   kernel <- match.arg(kernel)
   solver <- match.arg(solver)
   if (fit_intercept == TRUE) {
     X <- cbind(X, 1)
   }
-  kso <- kernel_select_option(X, kernel, solver, randx,
-                              gamma, degree, coef0)
+  reduce_flag <- is.null(reduce_set) == FALSE
+  if (solver == "dual" && reduce_flag == TRUE) {
+    reduce_flag <- FALSE
+    reduce_set <- NULL
+    cat("The dual solver does not support the reduce set; it has been set to NULL.\n")
+  }
+  kso <- kernel_select_option_(X, kernel, reduce_set, gamma, degree, coef0)
   KernelX <- kso$KernelX
-  X <- kso$X
   if (solver == "primal") {
     solver.res <- als_svm_primal_solver(KernelX, y, C, p,
-                                          max.steps, batch_size,
-                                          optimizer, ...)
+                                        max.steps, batch_size,
+                                        optimizer, ...)
   } else if (solver == "dual") {
     solver.res <- als_svm_dual_solver(KernelX, y, C,
                                       p, eps, max.steps)
   }
-  SVMClassifier <- list("X" = X, "y" = y, "class_set" = class_set,
+  SVMClassifier <- list("X" = X, "y" = y,
+                        "reduce_flag" = reduce_flag,
+                        "reduce_set" = reduce_set,
+                        "class_set" = class_set,
                         "C" = C, "kernel" = kernel,
                         "gamma" = gamma, "degree" = degree, "coef0" = coef0,
                         "solver" = solver, "coef" = solver.res$coef,
-                        "fit_intercept" = fit_intercept)
+                        "fit_intercept" = fit_intercept,
+                        "solver.res" = solver.res)
   class(SVMClassifier) <- "SVMClassifier"
   return(SVMClassifier)
 }

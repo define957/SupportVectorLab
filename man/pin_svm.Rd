@@ -20,6 +20,8 @@ pin_svm(
   fit_intercept = TRUE,
   optimizer = pegasos,
   reduce_set = NULL,
+  dual_optimizer = clip_dcd_optimizer,
+  dual_optimizer_option = NULL,
   ...
 )
 }
@@ -57,6 +59,10 @@ the function will evaluates intercept.}
 \item{optimizer}{default primal optimizer pegasos.}
 
 \item{reduce_set}{reduce set for reduce SVM, default \code{reduce_set = NULL}.}
+
+\item{dual_optimizer}{default optimizer is \code{clip_dcd_optimizer}.}
+
+\item{dual_optimizer_option}{optimizer options.}
 
 \item{...}{unused parameters.}
 }

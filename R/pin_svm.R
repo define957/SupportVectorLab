@@ -1,5 +1,5 @@
-pin_svm_dual_solver <- function(KernelX, y, C = 1, tau = 0.5,
-                                eps = 1e-5, max.steps = 80) {
+pin_svm_dual_solver <- function(KernelX, y, C, tau,
+                                dual_optimizer, dual_optimizer_option) {
   n <- nrow(KernelX)
   H <- calculate_svm_H(KernelX, y)
   e <- matrix(1, nrow = n)
@@ -11,7 +11,13 @@ pin_svm_dual_solver <- function(KernelX, y, C = 1, tau = 0.5,
   } else {
     u0 <- (lb + ub)/2
   }
-  u <- clip_dcd_optimizer(H, e, lb, ub, eps, max.steps, u0)$x
+  dual_optimizer_option <- append(list("H" = H,
+                                       "q" = e,
+                                       "lb" = lb,
+                                       "ub" = ub,
+                                       "u" = u0),
+                                  dual_optimizer_option)
+  u <- do.call("dual_optimizer", dual_optimizer_option)$x
   coef <- y*u
   BaseDualPinSVMClassifier <- list(coef = as.matrix(coef))
   class(BaseDualPinSVMClassifier) <- "BaseDualPinSVMClassifier"
@@ -80,6 +86,8 @@ pin_svm_primal_solver <- function(KernelX, X, y, C, tau,
 #'                      the function will evaluates intercept.
 #' @param optimizer default primal optimizer pegasos.
 #' @param reduce_set reduce set for reduce SVM, default \code{reduce_set = NULL}.
+#' @param dual_optimizer default optimizer is \code{clip_dcd_optimizer}.
+#' @param dual_optimizer_option optimizer options.
 #' @param ... unused parameters.
 #' @return return \code{SVMClassifier} object.
 #' @export
@@ -89,7 +97,8 @@ pin_svm <- function(X, y, C = 1, kernel = c("linear", "rbf", "poly"),
                     eps = 1e-5, max.steps = 4000, batch_size = nrow(X) / 10,
                     solver = c("dual", "primal"),
                     fit_intercept = TRUE, optimizer = pegasos,
-                    reduce_set = NULL, ...) {
+                    reduce_set = NULL, dual_optimizer = clip_dcd_optimizer,
+                    dual_optimizer_option = NULL, ...) {
   X <- as.matrix(X)
   y <- as.matrix(y)
   class_set <- sort(unique(y))
@@ -120,8 +129,11 @@ pin_svm <- function(X, y, C = 1, kernel = c("linear", "rbf", "poly"),
                                         reduce_set,
                                         ...)
   } else if (solver == "dual") {
-    solver.res <- pin_svm_dual_solver(KernelX, y, C, tau, eps,
-                                      max.steps)
+    if (is.null(dual_optimizer_option)) {
+      dual_optimizer_option <- list("max.steps" = max.steps, "eps" = eps)
+    }
+    solver.res <- pin_svm_dual_solver(KernelX, y, C, tau,
+                                      dual_optimizer, dual_optimizer_option)
   }
   SVMClassifier <- list("X" = X, "y" = y,
                         "reduce_flag" = reduce_flag,
@@ -130,7 +142,8 @@ pin_svm <- function(X, y, C = 1, kernel = c("linear", "rbf", "poly"),
                         "C" = C, "kernel" = kernel,
                         "gamma" = gamma, "degree" = degree, "coef0" = coef0,
                         "solver" = solver, "coef" = solver.res$coef,
-                        "fit_intercept" = fit_intercept)
+                        "fit_intercept" = fit_intercept,
+                        "solver.res" = solver.res)
   class(SVMClassifier) <- "SVMClassifier"
   return(SVMClassifier)
 }

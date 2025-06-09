@@ -1,5 +1,5 @@
-sh_svm_dual_solver <- function(KernelX, y, C = 1,
-                                  eps = 1e-5, max.steps = 80) {
+sh_svm_dual_solver <- function(KernelX, y, C,
+                               dual_optimizer, dual_optimizer_option) {
   n <- nrow(KernelX)
   H <- calculate_svm_H(KernelX, y)
   H <- H + diag(1/C, n)
@@ -7,7 +7,13 @@ sh_svm_dual_solver <- function(KernelX, y, C = 1,
   lb <- matrix(0, n)
   ub <- matrix(Inf, n)
   u0 <- lb
-  alphas <- clip_dcd_optimizer(H, e, lb, ub, eps, max.steps, u0)$x
+  dual_optimizer_option <- append(list("H" = H,
+                                       "q" = e,
+                                       "lb" = lb,
+                                       "ub" = ub,
+                                       "u" = u0),
+                                  dual_optimizer_option)
+  alphas <- do.call("dual_optimizer", dual_optimizer_option)$x
   coef <- y*alphas
   BaseDualSquaredHingeSVMClassifier <- list(coef = as.matrix(coef))
   class(BaseDualSquaredHingeSVMClassifier) <- "BaseDualSquaredHingeSVMClassifier"
@@ -64,15 +70,19 @@ sh_svm_primal_solver <- function(KernelX, y, C = 1,
 #' @param fit_intercept if set \code{fit_intercept = TRUE},
 #'                      the function will evaluates intercept.
 #' @param optimizer default primal optimizer pegasos.
-#' @param randx parameter for reduce SVM, default \code{randx = 0.1}.
+#' @param reduce_set reduce set for reduce SVM, default \code{reduce_set = NULL}.
+#' @param dual_optimizer default optimizer is \code{clip_dcd_optimizer}.
+#' @param dual_optimizer_option optimizer options.
 #' @param ... unused parameters.
 #' @return return \code{HingeSVMClassifier} object.
 #' @export
 sh_svm <- function(X, y, C = 1, kernel = c("linear", "rbf", "poly"),
                    gamma = 1 / ncol(X), degree = 3, coef0 = 0,
-                   eps = 1e-5, max.steps = 80, batch_size = nrow(X) / 10,
+                   eps = 1e-5, max.steps = 4000, batch_size = nrow(X) / 10,
                    solver = c("dual", "primal"),
-                   fit_intercept = TRUE, optimizer = pegasos, randx = 0.1, ...) {
+                   fit_intercept = TRUE, optimizer = pegasos,
+                   reduce_set = NULL, dual_optimizer = clip_dcd_optimizer,
+                   dual_optimizer_option = NULL, ...) {
   X <- as.matrix(X)
   y <- as.matrix(y)
   class_set <- sort(unique(y))
@@ -88,22 +98,34 @@ sh_svm <- function(X, y, C = 1, kernel = c("linear", "rbf", "poly"),
   if (fit_intercept == TRUE) {
     X <- cbind(X, 1)
   }
-  kso <- kernel_select_option(X, kernel, solver, randx,
-                              gamma, degree, coef0)
+  reduce_flag <- is.null(reduce_set) == FALSE
+  if (solver == "dual" && reduce_flag == TRUE) {
+    reduce_flag <- FALSE
+    reduce_set <- NULL
+    cat("The dual solver does not support the reduce set; it has been set to NULL.\n")
+  }
+  kso <- kernel_select_option_(X, kernel, reduce_set, gamma, degree, coef0)
   KernelX <- kso$KernelX
-  X <- kso$X
   if (solver == "primal") {
     solver.res <- sh_svm_primal_solver(KernelX, y, C,
                                        max.steps, batch_size,
                                        optimizer, ...)
   } else if (solver == "dual") {
-    solver.res <- sh_svm_dual_solver(KernelX, y, C, eps, max.steps)
+    if (is.null(dual_optimizer_option)) {
+      dual_optimizer_option <- list("max.steps" = max.steps, "eps" = eps)
+    }
+    solver.res <- sh_svm_dual_solver(KernelX, y, C,
+                                     dual_optimizer, dual_optimizer_option)
   }
-  SVMClassifier <- list("X" = X, "y" = y, "class_set" = class_set,
+  SVMClassifier <- list("X" = X, "y" = y,
+                        "reduce_flag" = reduce_flag,
+                        "reduce_set" = reduce_set,
+                        "class_set" = class_set,
                         "C" = C, "kernel" = kernel,
                         "gamma" = gamma, "degree" = degree, "coef0" = coef0,
                         "solver" = solver, "coef" = solver.res$coef,
-                        "fit_intercept" = fit_intercept)
+                        "fit_intercept" = fit_intercept,
+                        "solver.res" = solver.res)
   class(SVMClassifier) <- "SVMClassifier"
   return(SVMClassifier)
 }

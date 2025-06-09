@@ -1,4 +1,5 @@
-en_svm_dual_solver <- function(KernelX, y, C1, C2, eps, max.steps) {
+en_svm_dual_solver <- function(KernelX, y, C1, C2,
+                               dual_optimizer, dual_optimizer_option){
 
   n <- nrow(KernelX)
   e <- matrix(1, n, 1)
@@ -14,8 +15,13 @@ en_svm_dual_solver <- function(KernelX, y, C1, C2, eps, max.steps) {
   lb[1:n] <- 0
   ub <- matrix(Inf, 2*n)
   u0 <- lb
-  u <- clip_dcd_optimizer(dualH, q, lb, ub, eps, max.steps, u0)$x
-
+  dual_optimizer_option <- append(list("H" = dualH,
+                                       "q" = q,
+                                       "lb" = lb,
+                                       "ub" = ub,
+                                       "u" = u0),
+                                  dual_optimizer_option)
+  u <- do.call("dual_optimizer", dual_optimizer_option)$x
   coef <- y * u[1:n]
   BaseDualENSVMClassifier <- list(coef = as.matrix(coef))
   class(BaseDualENSVMClassifier) <- "BaseDualENSVMClassifier"
@@ -42,6 +48,9 @@ en_svm_dual_solver <- function(KernelX, y, C1, C2, eps, max.steps) {
 #' @param max.steps the number of iterations to solve the optimization problem.
 #' @param fit_intercept if set \code{fit_intercept = TRUE},
 #'                      the function will evaluates intercept.
+#' @param reduce_set reduce set for reduce SVM, default \code{reduce_set = NULL}.
+#' @param dual_optimizer default optimizer is \code{clip_dcd_optimizer}.
+#' @param dual_optimizer_option optimizer options.
 #' @param ... unused parameters.
 #' @return return \code{SVMClassifier} object.
 #' @export
@@ -49,7 +58,9 @@ en_svm <- function(X, y, C1 = 1, C2 = 1,
                    kernel = c("linear", "rbf", "poly"),
                    gamma = 1 / ncol(X), degree = 3, coef0 = 0,
                    eps = 1e-5, max.steps = 4000,
-                   fit_intercept = TRUE, ...) {
+                   fit_intercept = TRUE,
+                   reduce_set = NULL, dual_optimizer = clip_dcd_optimizer,
+                   dual_optimizer_option = NULL, ...) {
   X <- as.matrix(X)
   y <- as.matrix(y)
   class_set <- sort(unique(y))
@@ -75,13 +86,21 @@ en_svm <- function(X, y, C1 = 1, C2 = 1,
   kso <- kernel_select_option_(X, kernel, reduce_set, gamma, degree, coef0)
   KernelX <- kso$KernelX
   if (solver == "dual") {
-    solver.res <- en_svm_dual_solver(KernelX, y, C1, C2,eps, max.steps)
+    if (is.null(dual_optimizer_option)) {
+      dual_optimizer_option <- list("max.steps" = max.steps, "eps" = eps)
+    }
+    solver.res <- en_svm_dual_solver(KernelX, y, C1, C2,
+                                     dual_optimizer, dual_optimizer_option)
   }
-  SVMClassifier <- list("X" = X, "y" = y, "class_set" = class_set,
+  SVMClassifier <- list("X" = X, "y" = y,
+                        "reduce_flag" = reduce_flag,
+                        "reduce_set" = reduce_set,
+                        "class_set" = class_set,
                         "C1" = C1, "C2" = C2, "kernel" = kernel,
                         "gamma" = gamma, "degree" = degree, "coef0" = coef0,
                         "solver" = solver, "coef" = solver.res$coef,
-                        "fit_intercept" = fit_intercept)
+                        "fit_intercept" = fit_intercept,
+                        "solver.res" = solver.res)
   class(SVMClassifier) <- "SVMClassifier"
   return(SVMClassifier)
 }

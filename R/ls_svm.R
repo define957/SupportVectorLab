@@ -1,4 +1,4 @@
-ls_svm_dual_solver <- function(KernelX, y, C = 1) {
+ls_svm_dual_solver <- function(KernelX, y, C) {
   H <- calculate_svm_H(KernelX, y)
   m <- nrow(KernelX)
   u <- cholsolve((H + diag(1/C, m)), matrix(1, nrow = m))
@@ -76,8 +76,8 @@ ls_svm <- function(X, y, C = 1, kernel = c("linear", "rbf", "poly"),
                    gamma = 1 / ncol(X), degree = 3, coef0 = 0,
                    eps = 1e-5, max.steps = 80, batch_size = nrow(X) / 10,
                    solver = c("dual", "primal"),
-                   fit_intercept = TRUE, optimizer = pegasos, reduce_set = NULL,
-                   ...) {
+                   fit_intercept = TRUE, optimizer = pegasos,
+                   reduce_set = NULL, ...) {
   X <- as.matrix(X)
   y <- as.matrix(y)
   class_set <- sort(unique(y))
@@ -116,7 +116,8 @@ ls_svm <- function(X, y, C = 1, kernel = c("linear", "rbf", "poly"),
                         "C" = C, "kernel" = kernel,
                         "gamma" = gamma, "degree" = degree, "coef0" = coef0,
                         "solver" = solver, "coef" = solver.res$coef,
-                        "fit_intercept" = fit_intercept)
+                        "fit_intercept" = fit_intercept,
+                        "solver.res" = solver.res)
   class(SVMClassifier) <- "SVMClassifier"
   return(SVMClassifier)
 }
