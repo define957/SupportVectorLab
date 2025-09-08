@@ -24,11 +24,13 @@ bq_svm_dual_solver <- function(KernelX, y, C, update_deltak,
     u0[u0 < lb] <- lb[u0 < lb]
     dual_optimizer_option$lb <- lb
     dual_optimizer_option$ub <- ub
+    dual_optimizer_option$u <- u0
     u <- do.call("dual_optimizer", dual_optimizer_option)$x
     if (norm(u - u0, type = "2") < eps.cccp) {
       break
     } else {
       u0 <- u
+      dual_optimizer_option$u <- u0
     }
     f <- 1 - H %*% u0
     delta_k <- update_deltak(f, u0, lambda, tau)
