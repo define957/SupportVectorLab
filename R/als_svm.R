@@ -120,6 +120,10 @@ als_svm <- function(X, y, C = 1, kernel = c("linear", "rbf", "poly"),
                                         max.steps, batch_size,
                                         optimizer, ...)
   } else if (solver == "dual") {
+    if (is.null(dual_optimizer_option)) {
+      dual_optimizer_option <- list(max.steps = max.steps,
+                                    eps = eps)
+    }
     solver.res <- als_svm_dual_solver(KernelX, y, C, p,
                                       dual_optimizer, dual_optimizer_option)
   }
