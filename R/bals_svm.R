@@ -10,7 +10,7 @@ bals_svm_dual_solver <- function(KernelX, y, C, lambda, p,
     return(v)
   }
   n      <- nrow(KernelX)
-  H0     <- SupportVectorLab:::calculate_svm_H(KernelX, y)
+  H0     <- calculate_svm_H(KernelX, y)
   H      <- cbind(H0, -H0)
   H      <- rbind(H, -H)
   H_R <- H
@@ -74,17 +74,16 @@ bals_svm_dual_solver <- function(KernelX, y, C, lambda, p,
 #' @param eps.hq the precision of the optimization algorithm.
 #' @param max.steps the number of iterations to solve the optimization problem.
 #' @param hq.steps the number of iterations of HQ
-#' @param batch_size mini-batch size for primal solver.
 #' @param fit_intercept if set \code{fit_intercept = TRUE},
 #'                      the function will evaluates intercept.
-#' @param ... unused parameters.
+#' @param dual_optimizer default optimizer is \code{clip_dcd_optimizer}.
+#' @param dual_optimizer_option optimizer options.
 #' @return return \code{SVMClassifier} object.
 #' @export
 bals_svm <- function(X, y, C = 1, kernel = c("linear", "rbf", "poly"),
                      gamma = 1 / ncol(X), degree = 3, coef0 = 0,
                      p = 0.5, lambda = 1,
                      eps = 1e-5, eps.hq = 1e-2, max.steps = 4000, hq.steps = 10,
-                     batch_size = nrow(X) / 10,
                      fit_intercept = TRUE,
                      dual_optimizer = clip_dcd_optimizer,
                      dual_optimizer_option = NULL) {

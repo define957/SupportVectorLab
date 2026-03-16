@@ -18,8 +18,9 @@ bals_svm(
   eps.hq = 0.01,
   max.steps = 4000,
   hq.steps = 10,
-  batch_size = nrow(X)/10,
-  fit_intercept = TRUE
+  fit_intercept = TRUE,
+  dual_optimizer = clip_dcd_optimizer,
+  dual_optimizer_option = NULL
 )
 }
 \arguments{
@@ -52,10 +53,12 @@ bals_svm(
 
 \item{hq.steps}{the number of iterations of HQ}
 
-\item{batch_size}{mini-batch size for primal solver.}
-
 \item{fit_intercept}{if set \code{fit_intercept = TRUE},
 the function will evaluates intercept.}
+
+\item{dual_optimizer}{default optimizer is \code{clip_dcd_optimizer}.}
+
+\item{dual_optimizer_option}{optimizer options.}
 }
 \value{
 return \code{SVMClassifier} object.
