@@ -203,8 +203,8 @@ get_coef_norm <- function(kernel_config, model_coef) {
     w1_norm <- sqrt(t(model_coef$coef1[1:xp,]) %*% K %*% model_coef$coef1[1:xp,])
     w2_norm <- sqrt(t(model_coef$coef2[1:xp,]) %*% K %*% model_coef$coef2[1:xp,])
   } else {
-    w1_norm <- norm(model_coef$coef1, type = "2")
-    w2_norm <- norm(model_coef$coef2, type = "2")
+    w1_norm <- norm(model_coef$coef1[1:xp,], type = "2")
+    w2_norm <- norm(model_coef$coef2[1:xp,], type = "2")
   }
   return(list("w1_norm" = as.numeric(w1_norm),
               "w2_norm" = as.numeric(w2_norm)))
