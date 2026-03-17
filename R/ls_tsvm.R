@@ -1,18 +1,21 @@
 ls_tsvm_dual_solver <- function(KernelX, idx, C1, C2) {
-  EMat <- KernelX[-idx, ]
-  FMat <- KernelX[idx, ]
-  xn <- nrow(KernelX)
-  xp <- ncol(KernelX)
-  Fn <- nrow(FMat)
-  Mn <- xn - Fn
-  GramF <- t(FMat) %*% FMat
-  GramE <- t(EMat) %*% EMat
-  e1 <- matrix(1, Fn)
-  e2 <- matrix(1, Mn)
-  u <- -cholsolve(GramF + GramE/C1 + diag(1e-7, xp), t(FMat) %*% e1)
-  v <-  cholsolve(GramE + GramF/C2 + diag(1e-7, xp), t(EMat) %*% e2)
-  BaseDualLeastSquaresTSVMClassifier <- list("coef1" = as.matrix(u),
-                                             "coef2" = as.matrix(v))
+  G <- KernelX[-idx, , drop = FALSE]
+  H <- KernelX[idx, , drop = FALSE]
+  Hn <- nrow(H)
+  Gn <- nrow(G)
+
+  HTH       <- t(H) %*% H
+  GTG       <- t(G) %*% G
+  diag(HTH) <- diag(HTH) + 1e-7
+  diag(GTG) <- diag(GTG) + 1e-7
+
+  e1        <- matrix(1, Hn)
+  coef1     <- -cholsolve(HTH + GTG/C1, t(H) %*% e1)
+
+  e2        <- matrix(1, Gn)
+  coef2     <-  cholsolve(GTG + HTH/C2, t(G) %*% e2)
+  BaseDualLeastSquaresTSVMClassifier <- list("coef1" = as.matrix(coef1),
+                                             "coef2" = as.matrix(coef2))
   return(BaseDualLeastSquaresTSVMClassifier)
 }
 
