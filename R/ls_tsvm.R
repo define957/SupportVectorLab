@@ -1,19 +1,19 @@
 ls_tsvm_dual_solver <- function(KernelX, idx, C1, C2) {
-  G <- KernelX[-idx, , drop = FALSE]
-  H <- KernelX[idx, , drop = FALSE]
-  Hn <- nrow(H)
-  Gn <- nrow(G)
+
+  H         <- KernelX[-idx, , drop = FALSE]
+  G         <- KernelX[idx, , drop = FALSE]
+  Hn        <- nrow(H)
+  Gn        <- nrow(G)
 
   HTH       <- t(H) %*% H
   GTG       <- t(G) %*% G
   diag(HTH) <- diag(HTH) + 1e-7
   diag(GTG) <- diag(GTG) + 1e-7
-
   e1        <- matrix(1, Hn)
-  coef1     <- -cholsolve(HTH + GTG/C1, t(H) %*% e1)
-
   e2        <- matrix(1, Gn)
-  coef2     <-  cholsolve(GTG + HTH/C2, t(G) %*% e2)
+  coef1     <- -cholsolve(GTG + HTH/C1, t(G) %*% e2)
+  coef2     <-  cholsolve(HTH + GTG/C2, t(H) %*% e1)
+
   BaseDualLeastSquaresTSVMClassifier <- list("coef1" = as.matrix(coef1),
                                              "coef2" = as.matrix(coef2))
   return(BaseDualLeastSquaresTSVMClassifier)

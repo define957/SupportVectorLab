@@ -1,63 +1,63 @@
 cL2p_ls_tsvm_dual_solver <- function(KernelX, idx, C1, C2,
                                      p, epsilon1, epsilon2,
                                      eps.irls, irls.steps) {
+
   update_weight <- function(X, w, p, epsilon) {
     f <- X %*% w
     f2 <- f^2
     fL2p <- f2^(p/2)
-    f2[(f2 < 1e-7)] <- 1e-7
+    f2 <- pmax(f2, 1e-12)
     weight_elem <- (p/2)*f2^((p - 2)/2)
     weight_elem[fL2p >= epsilon] <- 0
     return(as.vector(weight_elem))
   }
 
-  X1 <- KernelX[-idx, ]
-  X2 <- KernelX[idx, ]
+  H     <- KernelX[-idx, , drop = FALSE]
+  G     <- KernelX[idx, , drop = FALSE]
+  Hn    <- nrow(H)
+  Gn    <- nrow(G)
+  xp    <- ncol(KernelX)
 
-  xn <- nrow(KernelX)
-  xp <- ncol(KernelX)
-  X1n <- nrow(X1)
-  X2n <- xn - X1n
+  Fvec  <- rep(1, Hn)
+  Dvec  <- rep(1, Gn)
 
-  Fvec <- rep(1, X1n)
-  Dvec <- rep(1, X2n)
+  e1    <- matrix(1, Hn)
+  e2    <- matrix(1, Gn)
 
-  epsI <- diag(1e-7, xp)
+  coef1 <- matrix(0, xp)
+  coef2 <- matrix(0, xp)
 
-  e1 <- matrix(1, X1n)
-  e2 <- matrix(1, X2n)
-
-  u01 <- matrix(0, xp)
-  u02 <- matrix(0, xp)
-
-  GramX2 <- t(X2) %*% X2
-  GramX1 <- t(X1) %*% X1
-
-  X1T_e1 <- t(X1) %*% e1
-  X2T_e2 <- t(X2) %*% e2
+  HTH   <- t(H) %*% H
+  GTG   <- t(G) %*% G
+  HT_e1 <- t(H) %*% e1
+  GT_e2 <- t(G) %*% e2
 
   for (i in 1:irls.steps) {
-    u11 <- -cholsolve(t(X1*(Fvec/C1)) %*% X1 + GramX2 + epsI, X2T_e2)
-    Fvec <- update_weight(X1, u11, p, epsilon1)
-    if (norm(u11 - u01, type = "2") < eps.irls) {
+    A         <- t(H*(Fvec/C1)) %*% H + GTG
+    diag(A)   <- diag(A) + 1e-7
+    coef1_new <- -cholsolve(A, GT_e2)
+    if (norm(coef1_new - coef1, type = "2") < eps.irls) {
+      coef1 <- coef1_new
       break
-    } else {
-      u01 <- u11
     }
+    Fvec  <- update_weight(H, coef1_new, p, epsilon1)
+    coef1 <- coef1_new
   }
 
   for (i in 1:irls.steps) {
-    u12 <- cholsolve(t(X2*(Dvec/C2)) %*% X2 + GramX1 + epsI, X1T_e1)
-    Dvec <- update_weight(X2, u12, p, epsilon2)
-    if (norm(u12 - u02, type = "2") < eps.irls) {
+    B         <- t(G*(Dvec/C2)) %*% G + HTH
+    diag(B)   <- diag(B) + 1e-7
+    coef2_new <- cholsolve(B, HT_e1)
+    if (norm(coef2_new - coef2, type = "2") < eps.irls) {
+      coef2 <- coef2_new
       break
-    } else {
-      u02 <- u12
     }
+    Dvec  <- update_weight(G, coef2_new, p, epsilon2)
+    coef2 <- coef2_new
   }
 
-  BaseDualCL2PLSTSVMClassifier <- list("coef1" = as.matrix(u11),
-                                       "coef2" = as.matrix(u12))
+  BaseDualCL2PLSTSVMClassifier <- list("coef1" = as.matrix(coef1),
+                                       "coef2" = as.matrix(coef2))
   return(BaseDualCL2PLSTSVMClassifier)
 }
 
@@ -135,10 +135,9 @@ cL2p_ls_tsvm <- function(X, y, C1 = 1, C2 = C1,
                        "KernelX" = KernelX[, 1:kxp, drop = FALSE])
   w_norm <- get_coef_norm(kernel_config, model_coef)
   kernel_config$w_norm <- w_norm
-  TSVMClassifier <- structure(
-    list("model_specs" = model_specs,
-         "model_coef" = model_coef,
-         "kernel_config" = kernel_config),
-    "class" = "TSVMClassifier")
+  TSVMClassifier <- structure(list("model_specs" = model_specs,
+                                   "model_coef" = model_coef,
+                                   "kernel_config" = kernel_config),
+                              "class" = "TSVMClassifier")
   return(TSVMClassifier)
 }
