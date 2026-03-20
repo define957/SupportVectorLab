@@ -12,18 +12,18 @@ Rcpp::Rostream<false>& Rcpp::Rcerr = Rcpp::Rcpp_cerr_get();
 #endif
 
 // cpp_clip_dcd_optimizer
-Rcpp::List cpp_clip_dcd_optimizer(arma::mat H, arma::mat q, arma::mat lb, arma::mat ub, double eps, unsigned int max_steps, arma::mat u);
+Rcpp::List cpp_clip_dcd_optimizer(const arma::mat& H, const arma::vec& q, const arma::vec& lb, const arma::vec& ub, const double eps, unsigned int max_steps, arma::vec u);
 RcppExport SEXP _SupportVectorLab_cpp_clip_dcd_optimizer(SEXP HSEXP, SEXP qSEXP, SEXP lbSEXP, SEXP ubSEXP, SEXP epsSEXP, SEXP max_stepsSEXP, SEXP uSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< arma::mat >::type H(HSEXP);
-    Rcpp::traits::input_parameter< arma::mat >::type q(qSEXP);
-    Rcpp::traits::input_parameter< arma::mat >::type lb(lbSEXP);
-    Rcpp::traits::input_parameter< arma::mat >::type ub(ubSEXP);
-    Rcpp::traits::input_parameter< double >::type eps(epsSEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type H(HSEXP);
+    Rcpp::traits::input_parameter< const arma::vec& >::type q(qSEXP);
+    Rcpp::traits::input_parameter< const arma::vec& >::type lb(lbSEXP);
+    Rcpp::traits::input_parameter< const arma::vec& >::type ub(ubSEXP);
+    Rcpp::traits::input_parameter< const double >::type eps(epsSEXP);
     Rcpp::traits::input_parameter< unsigned int >::type max_steps(max_stepsSEXP);
-    Rcpp::traits::input_parameter< arma::mat >::type u(uSEXP);
+    Rcpp::traits::input_parameter< arma::vec >::type u(uSEXP);
     rcpp_result_gen = Rcpp::wrap(cpp_clip_dcd_optimizer(H, q, lb, ub, eps, max_steps, u));
     return rcpp_result_gen;
 END_RCPP

@@ -1,83 +1,111 @@
 #include <RcppArmadillo.h>
 #include <Rcpp.h>
+
 using namespace arma;
 using namespace Rcpp;
-using namespace std;
+
 // [[Rcpp::depends(RcppArmadillo)]]
 
 //[[Rcpp::export]]
-Rcpp::List cpp_clip_dcd_optimizer(arma::mat H, arma::mat q,
-                                  arma::mat lb, arma::mat ub,
-                                  double eps, unsigned int max_steps,
-                                  arma::mat u){
-  unsigned int n = H.n_rows;
-  unsigned int i = 0;
-  unsigned int j = 0;
-  unsigned int max_idx = 0;
-  unsigned int max_idx_temp = 0;
-  double L_val_max;
-  double lambda_opt = 0;
-  double lambda_opt_temp = 0;
-  arma::mat numerator(n, 1);
-  arma::vec L_idx_val(n);
-  arma::vec L_val(n);
-  arma::mat Hu(n, n);
-  Hu = H * u;
-  arma::vec ub_u(n);
-  ub_u = ub - u;
-  arma::vec lb_u(n);
-  lb_u = lb - u;
-  arma::vec Huik(n);
-  arma::mat Hui(n, n);
-  arma::uvec idx;
-  arma::uvec unique_idx;
-  arma::mat diagH = H.diag();
-  arma::mat ut = u.t();
-  arma::vec lambda_max_list;
-  arma::vec u_old(1);
-  arma::vec u_new(1);
-  arma::mat umat(n, n);
-  umat.each_row() = ut;
-  Hui = H % umat;
-  for(i = 0; i < max_steps; i++){
-    numerator = q - Hu;
-    L_idx_val = numerator / diagH;
-    L_val = numerator % L_idx_val;
-    unique_idx = find((u > lb && L_idx_val < 0) || (u < ub && L_idx_val > 0));
-    if(unique_idx.n_elem == 0){
-      break;
-    }
-    L_val_max = as_scalar(max(L_val(unique_idx)));
-    if(L_val_max < eps){
-      break;
-    }
-    idx = find(L_val == L_val_max);
-    lambda_max_list = L_idx_val(idx);
-    lambda_opt = 0;
-    max_idx = 0;
-    for (j = 0; j < idx.n_elem; j++) {
-      max_idx_temp = as_scalar(idx(j));
-      lambda_opt_temp = max(as_scalar(lb_u(max_idx_temp)),
-                            min(lambda_max_list(j),
-                                as_scalar(ub_u(max_idx_temp))));
-      if (abs(lambda_opt) < abs(lambda_opt_temp)) {
-        max_idx = max_idx_temp;
-        lambda_opt = lambda_opt_temp;
+Rcpp::List cpp_clip_dcd_optimizer(const arma::mat& H, const arma::vec& q,
+                                  const arma::vec& lb, const arma::vec& ub,
+                                  const double eps, unsigned int max_steps,
+                                  arma::vec u) {
+
+  const unsigned int n                    = H.n_rows;
+  const arma::vec    inv_diagH            = 1.0 / H.diag();
+  unsigned int       iter                 = 0;
+  arma::vec          numerator            = q - H * u;
+  arma::vec          ub_u                 = ub - u;
+  arma::vec          lb_u                 = lb - u;
+  arma::uvec         feasible_indices(n);
+
+  for(iter = 0; iter < max_steps; ++iter) {
+
+    unsigned int count = 0;
+    for(unsigned int i = 0; i < n; ++i) {
+
+      double nu   = numerator(i);
+      double lb_i = lb_u(i);
+      double ub_i = ub_u(i);
+
+      if(std::fabs(nu) < 1e-12) {
+        continue;
+      }
+      if((lb_i < 0 && nu < 0) ||
+         (ub_i > 0 && nu > 0)) {
+        feasible_indices(count++) = i;
       }
     }
-    u_old = u(max_idx);
-    u_new = u(max_idx) + lambda_opt;
-    u(max_idx) = u_new(0);
-    Huik = H.col(max_idx)*u(max_idx);
-    Hu = Hu - Hui.col(max_idx) + Huik;
-    Hui(span::all, max_idx) = Huik;
-    ub_u(max_idx) = ub(max_idx) - u_new(0);
-    lb_u(max_idx) = lb(max_idx) - u_new(0);
-  }
-  double obj_val = as_scalar(0.5 * u.t() * H * u - q.t() * u);
 
-  List res = List::create(Named("x") = u,
-                          Named("iterations") = i+1,
-                          Named("objectiv.value") = obj_val);
-  return res;
+    if(count == 0){break;}
+
+    double       max_decrease = 0.0;
+    unsigned int max_count    = 0;
+    unsigned int best_idx     = 0;
+
+    for(unsigned int k = 0; k < count; ++k) {
+      unsigned int idx      = feasible_indices(k);
+      double       nu       = numerator(idx);
+      double       decrease = (nu * nu) * inv_diagH(idx);
+
+      if(decrease > max_decrease) {
+        max_decrease        = decrease;
+        max_count           = 1;
+        feasible_indices(0) = idx;
+        best_idx            = idx;
+      } else if(decrease == max_decrease) {
+        feasible_indices(max_count++) = idx;
+      }
+    }
+
+    if(max_decrease < eps){break;}
+
+    if(max_count > 1) {
+      double max_step_abs = 0.0;
+      for(unsigned int k = 0; k < max_count; ++k) {
+        unsigned int idx  = feasible_indices(k);
+        double       step = numerator(idx) * inv_diagH(idx);
+
+        if(step < lb_u(idx)) step = lb_u(idx);
+        if(step > ub_u(idx)) step = ub_u(idx);
+
+        if(std::abs(step) > max_step_abs) {
+          max_step_abs = std::abs(step);
+          best_idx     = idx;
+        }
+      }
+    }
+
+    double lambda_opt_unclipped = numerator(best_idx) * inv_diagH(best_idx);
+    double u_old                = u(best_idx);
+    double u_new                = u_old + lambda_opt_unclipped;
+    double delta;
+
+    if (u_new < lb(best_idx)) {
+      delta = lb(best_idx) - u_old;
+      u(best_idx)    = lb(best_idx);
+      lb_u(best_idx) = 0;
+      ub_u(best_idx) = ub(best_idx) - lb(best_idx);
+    } else if (u_new > ub(best_idx)) {
+      delta = ub(best_idx) - u_old;
+      u(best_idx)    = ub(best_idx);
+      lb_u(best_idx) = lb(best_idx) - ub(best_idx);
+      ub_u(best_idx) = 0;
+    } else {
+      delta           = lambda_opt_unclipped;
+      u(best_idx)     = u_new;
+      lb_u(best_idx) -= delta;
+      ub_u(best_idx) -= delta;
+    }
+    numerator -= H.col(best_idx) * delta;
+  }
+
+  double obj_val = 0.5 * dot(u, q - numerator) - dot(q, u);
+
+  return Rcpp::List::create(
+    Rcpp::Named("x") = std::move(u),
+    Rcpp::Named("iterations") = iter,
+    Rcpp::Named("objective.value") = obj_val
+  );
 }
