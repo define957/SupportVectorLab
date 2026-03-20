@@ -92,6 +92,7 @@ cL2p_ls_tsvm <- function(X, y, C1 = 1, C2 = C1,
                          p = 1, epsilon1 = 1, epsilon2 = epsilon1,
                          eps.irls = 1e-2, irls.steps = 10,
                          fit_intercept = TRUE, reduce_set = 1) {
+
   X <- as.matrix(X)
   y <- as.matrix(y)
 

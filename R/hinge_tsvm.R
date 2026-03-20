@@ -14,7 +14,7 @@ hinge_tsvm_dual_solver <- function(KernelX, idx, C1, C2, eps, max.steps) {
   dualub1    <- matrix(C1, Gn)
   u01        <- matrix(0, Gn)
   dual_coef1 <- clip_dcd_optimizer(dualH1, dualq1, duallb1, dualub1,
-                                  eps, max.steps, u01)$x
+                                   eps, max.steps, u01)$x
   coef1      <- -invHTH_GT %*% dual_coef1
 
   GTG        <- t(G) %*% G
@@ -57,7 +57,7 @@ hinge_tsvm_dual_solver <- function(KernelX, idx, C1, C2, eps, max.steps) {
 #' @param reduce_set reduce set for reduce SVM, default \code{reduce_set = NULL}.
 #' @return return \code{TSVMClassifier} object.
 #' @export
-hinge_tsvm <- function(X, y, C1 = 1, C2 = 1,
+hinge_tsvm <- function(X, y, C1 = 1, C2 = C1,
                        kernel = c("linear", "rbf", "poly"),
                        gamma = 1 / ncol(X), degree = 3, coef0 = 0,
                        eps = 1e-5, max.steps = 4000,
@@ -110,7 +110,7 @@ hinge_tsvm <- function(X, y, C1 = 1, C2 = 1,
   TSVMClassifier <- structure(list("model_specs" = model_specs,
                                    "model_coef" = model_coef,
                                    "kernel_config" = kernel_config),
-                                   "class" = "TSVMClassifier")
+                              "class" = "TSVMClassifier")
   return(TSVMClassifier)
 }
 

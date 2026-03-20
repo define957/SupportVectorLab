@@ -40,10 +40,11 @@ ls_tsvm_dual_solver <- function(KernelX, idx, C1, C2) {
 #' @param reduce_set reduce set for reduce SVM, default \code{reduce_set = NULL}.
 #' @return return \code{TSVMClassifier} object.
 #' @export
-ls_tsvm <- function(X, y, C1 = 1, C2 = 1,
+ls_tsvm <- function(X, y, C1 = 1, C2 = C1,
                     kernel = c("linear", "rbf", "poly"),
                     gamma = 1 / ncol(X), degree = 3, coef0 = 0,
                     fit_intercept = TRUE, reduce_set = NULL) {
+
   X <- as.matrix(X)
   y <- as.matrix(y)
 
