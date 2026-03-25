@@ -4,10 +4,9 @@ cL2p_ls_tsvm_dual_solver <- function(KernelX, idx, C1, C2,
 
   update_weight <- function(X, w, p, epsilon) {
     f <- X %*% w
-    f2 <- f^2
-    fL2p <- f2^(p/2)
-    f2 <- pmax(f2, 1e-12)
-    weight_elem <- (p/2)*f2^((p - 2)/2)
+    abs_f <- abs(f)
+    fL2p <- abs_f^p
+    weight_elem <- (p/2)*(abs_f + 1e-5)^(p - 2)
     weight_elem[fL2p >= epsilon] <- 0
     return(as.vector(weight_elem))
   }
