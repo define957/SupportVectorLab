@@ -1,8 +1,8 @@
 cL2p_ls_tsvm_dual_solver <- function(KernelX, idx, C1, C2,
                                      p, epsilon1, epsilon2,
-                                     eps.irls, irls.steps) {
+                                     eps.irls, irls.steps, irls.reg) {
 
-  update_weight <- function(X, w, p, epsilon) {
+  update_weight <- function(X, w, p, epsilon, irls.reg) {
     f <- X %*% w
     abs_f <- abs(f)
     abs_f <- pmax(abs_f, 1e-5)
@@ -83,6 +83,7 @@ cL2p_ls_tsvm_dual_solver <- function(KernelX, idx, C1, C2,
 #' @param irls.steps the number of iterations to solve the optimization problem.
 #' @param fit_intercept if set \code{fit_intercept = TRUE},
 #'                      the function will evaluates intercept.
+#' @param irls.reg \code{irls.reg} is used to avoid division-by-zero issues when updating weights.
 #' @param reduce_set reduce set for reduce SVM, default \code{reduce_set = NULL}.
 #' @return return \code{TSVMClassifier} object.
 #' @export
@@ -90,7 +91,7 @@ cL2p_ls_tsvm <- function(X, y, C1 = 1, C2 = C1,
                          kernel = c("linear", "rbf", "poly"),
                          gamma = 1 / ncol(X), degree = 3, coef0 = 0,
                          p = 1, epsilon1 = 1, epsilon2 = epsilon1,
-                         eps.irls = 1e-2, irls.steps = 10,
+                         eps.irls = 1e-2, irls.steps = 10, irls.reg = 1e-4,
                          fit_intercept = TRUE, reduce_set = NULL) {
 
   X <- as.matrix(X)
@@ -120,7 +121,7 @@ cL2p_ls_tsvm <- function(X, y, C1 = 1, C2 = C1,
   }
   solver.res <- cL2p_ls_tsvm_dual_solver(KernelX, idx, C1, C2,
                                          p, epsilon1, epsilon2,
-                                         eps.irls, irls.steps)
+                                         eps.irls, irls.steps, irls.reg)
   model_specs = list("X" = X, "y" = y,
                      "C1" = C1, "C2" = C2,
                      "fit_intercept" = fit_intercept,

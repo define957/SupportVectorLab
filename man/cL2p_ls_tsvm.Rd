@@ -18,8 +18,9 @@ cL2p_ls_tsvm(
   epsilon2 = epsilon1,
   eps.irls = 0.01,
   irls.steps = 10,
+  irls.reg = 1e-04,
   fit_intercept = TRUE,
-  reduce_set = 1
+  reduce_set = NULL
 )
 }
 \arguments{
@@ -47,6 +48,8 @@ cL2p_ls_tsvm(
 \item{eps.irls}{the precision of the optimization algorithm.}
 
 \item{irls.steps}{the number of iterations to solve the optimization problem.}
+
+\item{irls.reg}{\code{irls.reg} is used to avoid division-by-zero issues when updating weights.}
 
 \item{fit_intercept}{if set \code{fit_intercept = TRUE},
 the function will evaluates intercept.}
