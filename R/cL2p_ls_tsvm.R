@@ -40,7 +40,7 @@ cL2p_ls_tsvm_dual_solver <- function(KernelX, idx, C1, C2,
       coef1 <- coef1_new
       break
     }
-    Fvec  <- update_weight(H, coef1_new, p, epsilon1)
+    Fvec  <- update_weight(H, coef1_new, p, epsilon1, irls.reg)
     coef1 <- coef1_new
   }
 
@@ -52,7 +52,7 @@ cL2p_ls_tsvm_dual_solver <- function(KernelX, idx, C1, C2,
       coef2 <- coef2_new
       break
     }
-    Dvec  <- update_weight(G, coef2_new, p, epsilon2)
+    Dvec  <- update_weight(G, coef2_new, p, epsilon2, irls.reg)
     coef2 <- coef2_new
   }
 
