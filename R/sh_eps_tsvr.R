@@ -6,14 +6,19 @@ sh_eps_tsvr_dual_solver <- function(KernelX, y, C1, C2, C3, C4, epsilon1, epsilo
   G             <- KernelX
   GramG         <- t(G) %*% G
   GTG_C3_inv_GT <- cholsolve(GramG + diag(C3, xp), t(G))
-  dualH1        <- G %*% GTG_C3_inv_GT + 1/C1
+  dualH1        <- G %*% GTG_C3_inv_GT
+  dualH1_reg    <- dualH1
+  diag(dualH1_reg)  <- diag(dualH1_reg) + 1/C1 
 
   if (C3 != C4 || C1 != C2) {
     GTG_C4_inv_GT <- cholsolve(GramG + diag(C4, xp), t(G))
-    dualH2        <- G %*% GTG_C4_inv_GT + 1/C2
+    dualH2        <- G %*% GTG_C4_inv_GT
+    dualH2_reg    <- dualH2
+    diag(dualH2_reg)  <- diag(dualH2_reg) + 1/C2
   } else {
     GTG_C4_inv_GT <- GTG_C3_inv_GT
     dualH2        <- dualH1
+    dualH2_reg    <- dualH1_reg
   }
 
   q1 <- dualH1 %*% y - y - epsilon1
@@ -24,8 +29,8 @@ sh_eps_tsvr_dual_solver <- function(KernelX, y, C1, C2, C3, C4, epsilon1, epsilo
 
   u0 <- lb
 
-  dual_coef1 <- clip_dcd_optimizer(dualH1, q1, lb, ub, eps, max.steps, u0)$x
-  dual_coef2 <- clip_dcd_optimizer(dualH2, q2, lb, ub, eps, max.steps, u0)$x
+  dual_coef1 <- clip_dcd_optimizer(dualH1_reg, q1, lb, ub, eps, max.steps, u0)$x
+  dual_coef2 <- clip_dcd_optimizer(dualH2_reg, q2, lb, ub, eps, max.steps, u0)$x
 
   coef1      <- GTG_C3_inv_GT %*% (y - dual_coef1)
   coef2      <- GTG_C4_inv_GT %*% (y + dual_coef2)
