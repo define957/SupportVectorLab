@@ -9,7 +9,7 @@ hinge_eps_tsvr(
   y,
   C1 = 1,
   C2 = C1,
-  C3 = 1,
+  C3 = 1e-07,
   C4 = C3,
   epsilon1 = 0.1,
   epsilon2 = epsilon1,

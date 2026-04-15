@@ -2,41 +2,36 @@ sh_eps_tsvr_dual_solver <- function(KernelX, y, C1, C2, C3, C4, epsilon1, epsilo
                                     eps, max.steps) {
   xn <- nrow(KernelX)
   xp <- ncol(KernelX)
-  G <- KernelX
-  GramG <- t(G) %*% G
 
+  G             <- KernelX
+  GramG         <- t(G) %*% G
   GTG_C3_inv_GT <- cholsolve(GramG + diag(C3, xp), t(G))
-  G_GTG_C3_inv_GT <- G %*% GTG_C3_inv_GT
-  dualH1 <- G_GTG_C3_inv_GT
-  diag(dualH1) <- diag(dualH1) + 1/C1
+  dualH1        <- G %*% GTG_C3_inv_GT + 1/C1
 
-  if (C3 != C4) {
+  if (C3 != C4 || C1 != C1) {
     GTG_C4_inv_GT <- cholsolve(GramG + diag(C4, xp), t(G))
-    G_GTG_C4_inv_GT <- G %*% GTG_C4_inv_GT
-    dualH2 <- G_GTG_C4_inv_GT
-    diag(dualH2) <- diag(dualH2) + 1/C2
+    dualH2        <- G %*% GTG_C4_inv_GT + 1/C2
   } else {
     GTG_C4_inv_GT <- GTG_C3_inv_GT
-    G_GTG_C4_inv_GT <- G_GTG_C3_inv_GT
-    dualH2 <- dualH1
+    dualH2        <- dualH1
   }
 
-  q1 <- G_GTG_C3_inv_GT %*% y - y - epsilon1
-  q2 <- y - epsilon2 - G_GTG_C4_inv_GT %*% y
+  q1 <- dualH1 %*% y - y - epsilon1
+  q2 <- y - epsilon2 - dualH2 %*% y
 
   lb <- matrix(0, xn, 1)
   ub <- matrix(Inf, xn, 1)
 
-  x0 <- lb
+  u0 <- lb
 
-  alphas <- clip_dcd_optimizer(dualH1, q1, lb, ub, eps, max.steps, x0)$x
-  gammas <- clip_dcd_optimizer(dualH2, q2, lb, ub, eps, max.steps, x0)$x
+  dual_coef1 <- clip_dcd_optimizer(dualH1, q1, lb, ub, eps, max.steps, u0)$x
+  dual_coef2 <- clip_dcd_optimizer(dualH2, q2, lb, ub, eps, max.steps, u0)$x
 
-  u1 <- GTG_C3_inv_GT %*% (y - alphas)
-  u2 <- GTG_C4_inv_GT %*% (y + gammas)
+  coef1      <- GTG_C3_inv_GT %*% (y - dual_coef1)
+  coef2      <- GTG_C4_inv_GT %*% (y + dual_coef2)
 
-  BaseDualSquaredHingeEPSTWSVRRegressor <- list("coef1" = as.matrix(u1),
-                                                "coef2" = as.matrix(u2))
+  BaseDualSquaredHingeEPSTSVRRegressor <- list("coef1" = as.matrix(coef1),
+                                               "coef2" = as.matrix(coef2))
 }
 
 #' Squared Hinge Epsilon Twin Support Vector Regression
@@ -64,35 +59,51 @@ sh_eps_tsvr_dual_solver <- function(KernelX, y, C1, C2, C3, C4, epsilon1, epsilo
 #' @param reduce_set reduce set for reduce SVM, default \code{reduce_set = NULL}.
 #' @return return \code{TSVRClassifier} object.
 #' @export
-sh_eps_tsvr <- function(X, y, C1 = 1, C2 = C1, C3 = 1, C4 = C3,
-                           epsilon1 = 0.1, epsilon2 = epsilon1,
-                           kernel = c("linear", "rbf", "poly"),
-                           gamma = 1 / ncol(X), degree = 3, coef0 = 0,
-                           eps = 1e-7, max.steps = 4000, fit_intercept = TRUE,
-                           reduce_set = NULL) {
+sh_eps_tsvr <- function(X, y, C1 = 1, C2 = C1, C3 = 1e-7, C4 = C3,
+                        epsilon1 = 0.1, epsilon2 = epsilon1,
+                        kernel = c("linear", "rbf", "poly"),
+                        gamma = 1 / ncol(X), degree = 3, coef0 = 0,
+                        eps = 1e-7, max.steps = 4000, fit_intercept = TRUE,
+                        reduce_set = NULL) {
+
   X <- as.matrix(X)
   y <- as.matrix(y)
+
+  kernel  <- match.arg(kernel)
+  KernelR <- NULL
+
   kernel <- match.arg(kernel)
   if (kernel != "linear") {
-    kso <- kernel_select_option(X, kernel, reduce_set, gamma, degree, coef0)
+    kso <- kernel_select_option_(X, kernel, reduce_set, gamma, degree, coef0)
     KernelX <- kso$KernelX
+    KernelR <- kso$KernelR
   } else {
     KernelX <- X
   }
+  kxp <- ncol(KernelX)
   if (fit_intercept == TRUE) {
     KernelX <- cbind(KernelX, 1)
   }
   solver.res <- sh_eps_tsvr_dual_solver(KernelX, y, C1, C2, C3, C4, epsilon1, epsilon2,
                                         eps, max.steps)
-  EPSTSVRRegressor <- list("X" = X, "y" = y,
-                            "C1" = C1, "C2" = C2,
-                            "epsilon1" = epsilon1, "epsilon2" = epsilon2,
-                            "kernel" = kernel,
-                            "gamma" = gamma, "degree" = degree, "coef0" = coef0,
-                            "coef1" = solver.res$coef1,
-                            "coef2" = solver.res$coef2,
-                            "fit_intercept" = fit_intercept,
-                            "solver.res" = solver.res)
-  class(EPSTSVRRegressor) <- "EPSTSVRRegressor"
-  return(EPSTSVRRegressor)
+
+  model_specs   <- list("X" = X, "y" = y,
+                        "C1" = C1, "C2" = C2,
+                        "epsilon1" = epsilon1, "epsilon2" = epsilon2,
+                        "fit_intercept" = fit_intercept)
+  model_coef    <- list("coef1" = solver.res$coef1,
+                        "coef2" = solver.res$coef2)
+  kernel_config <- list("kernel" = kernel,
+                        "gamma"  = gamma,
+                        "degree" = degree,
+                        "coef0" = coef0,
+                        "reduce_set" = reduce_set,
+                        "KernelR" = KernelR,
+                        "KernelX" = KernelX[, 1:kxp, drop = FALSE])
+
+  EPSTSVMRegressor <- structure(list("model_specs" = model_specs,
+                                     "model_coef" = model_coef,
+                                     "kernel_config" = kernel_config),
+                                "class" = "EPSTSVMRegressor")
+  return(EPSTSVMRegressor)
 }
