@@ -127,6 +127,7 @@ hinge_tsvm <- function(X, y, C1 = 1, C2 = C1,
 predict.TSVMClassifier <- function(object, X, values = FALSE, ...) {
 
   X <- as.matrix(X)
+
   model_specs   <- object$model_specs
   kernel_config <- object$kernel_config
   model_coef    <- object$model_coef
@@ -135,12 +136,12 @@ predict.TSVMClassifier <- function(object, X, values = FALSE, ...) {
   if (kernel_config$kernel == "linear") {
     KernelX <- X
   } else {
-    if (reduce_flag) { Xmap <- kernel_config$reduce_set } else {Xmap <- model_specs$X}
+    if (reduce_flag) { Xmap <- kernel_config$reduce_set } else { Xmap <- model_specs$X }
     KernelX <- kernel_function(X, Xmap,
                                kernel.type = kernel_config$kernel,
-                               gamma = kernel_config$gamma,
-                               degree = kernel_config$degree,
-                               coef0 = kernel_config$coef0)
+                               gamma       = kernel_config$gamma,
+                               degree      = kernel_config$degree,
+                               coef0       = kernel_config$coef0)
   }
 
   if (model_specs$fit_intercept == TRUE) {
