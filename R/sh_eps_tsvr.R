@@ -8,7 +8,7 @@ sh_eps_tsvr_dual_solver <- function(KernelX, y, C1, C2, C3, C4, epsilon1, epsilo
   GTG_C3_inv_GT <- cholsolve(GramG + diag(C3, xp), t(G))
   dualH1        <- G %*% GTG_C3_inv_GT + 1/C1
 
-  if (C3 != C4 || C1 != C1) {
+  if (C3 != C4 || C1 != C2) {
     GTG_C4_inv_GT <- cholsolve(GramG + diag(C4, xp), t(G))
     dualH2        <- G %*% GTG_C4_inv_GT + 1/C2
   } else {
