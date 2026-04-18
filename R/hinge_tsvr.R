@@ -18,16 +18,16 @@ hinge_tsvr_dual_solver <- function(KernelX, y, C1, C2, epsilon1, epsilon2,
 
   x0 <- lb
 
-  alphas <- clip_dcd_optimizer(dualH, q1, lb, ub1, eps, max.steps, x0)$x
-  gammas <- clip_dcd_optimizer(dualH, q2, lb, ub2, eps, max.steps, x0)$x
+  dual_coef1 <- clip_dcd_optimizer(dualH, q1, lb, ub1, eps, max.steps, x0)$x
+  dual_coef2 <- clip_dcd_optimizer(dualH, q2, lb, ub2, eps, max.steps, x0)$x
 
-  u1 <- GTG_inv_G %*% (f - alphas)
-  u2 <- GTG_inv_G %*% (h + gammas)
+  coef1      <- GTG_inv_G %*% (f - dual_coef1)
+  coef2      <- GTG_inv_G %*% (h + dual_coef2)
 
-  BaseDualHingeTSVRRegressor <- list("coef1" = as.matrix(u1),
-                                     "coef2" = as.matrix(u2),
-                                     "lag1" = alphas,
-                                     "lag2" = gammas)
+  BaseDualHingeTSVRRegressor <- list("coef1" = as.matrix(coef1),
+                                     "coef2" = as.matrix(coef2),
+                                     "lag1" = dual_coef1,
+                                     "lag2" = dual_coef2)
 }
 
 #' Hinge Twin Support Vector Regression
@@ -60,31 +60,46 @@ hinge_tsvr <- function(X, y, C1 = 1, C2 = C1,
                        gamma = 1 / ncol(X), degree = 3, coef0 = 0,
                        eps = 1e-7, max.steps = 4000, fit_intercept = TRUE,
                        reduce_set = NULL) {
+
   X <- as.matrix(X)
   y <- as.matrix(y)
+
+  kernel  <- match.arg(kernel)
+  KernelR <- NULL
+
   kernel <- match.arg(kernel)
   if (kernel != "linear") {
-    kso <- kernel_select_option(X, kernel, reduce_set, gamma, degree, coef0)
+    kso <- kernel_select_option_(X, kernel, reduce_set, gamma, degree, coef0)
     KernelX <- kso$KernelX
+    KernelR <- kso$KernelR
   } else {
     KernelX <- X
   }
+  kxp <- ncol(KernelX)
   if (fit_intercept == TRUE) {
     KernelX <- cbind(KernelX, 1)
   }
   solver.res <- hinge_tsvr_dual_solver(KernelX, y, C1, C2, epsilon1, epsilon2,
                                        eps, max.steps)
-  TSVRRegressor <- list("X" = X, "y" = y,
-                       "C1" = C1, "C2" = C2,
-                       "epsilon1" = epsilon1, "epsilon2" = epsilon2,
-                       "kernel" = kernel,
-                       "gamma" = gamma, "degree" = degree, "coef0" = coef0,
-                       "coef1" = solver.res$coef1,
-                       "coef2" = solver.res$coef2,
-                       "fit_intercept" = fit_intercept,
-                       "solver.res" = solver.res)
-  class(TSVRRegressor) <- "TSVRRegressor"
-  return(TSVRRegressor)
+  model_specs   <- list("X" = X, "y" = y,
+                        "C1" = C1, "C2" = C2,
+                        "epsilon1" = epsilon1, "epsilon2" = epsilon2,
+                        "fit_intercept" = fit_intercept)
+  model_coef    <- list("coef1" = solver.res$coef1,
+                        "coef2" = solver.res$coef2)
+  kernel_config <- list("kernel" = kernel,
+                        "gamma"  = gamma,
+                        "degree" = degree,
+                        "coef0" = coef0,
+                        "reduce_set" = reduce_set,
+                        "KernelR" = KernelR,
+                        "KernelX" = KernelX[, 1:kxp, drop = FALSE])
+
+  TSVMRegressor <- structure(list("model_specs" = model_specs,
+                                   "model_coef" = model_coef,
+                                   "kernel_config" = kernel_config),
+                             "class" = "TSVMRegressor")
+  return(TSVMRegressor)
 }
 
 
@@ -96,21 +111,31 @@ hinge_tsvr <- function(X, y, C1 = 1, C2 = C1,
 #' @param ... unused parameter.
 #' @importFrom stats predict
 #' @export
-predict.TSVRRegressor <- function(object, X, ...) {
+predict.TSVMRegressor <- function(object, X, ...) {
+
   X <- as.matrix(X)
-  if (object$kernel == "linear") {
+
+  model_specs   <- object$model_specs
+  kernel_config <- object$kernel_config
+  model_coef    <- object$model_coef
+  reduce_flag   <- ifelse(is.null(kernel_config$reduce_set), 0, 1)
+
+  if (kernel_config$kernel == "linear") {
     KernelX <- X
   } else {
-    KernelX <- kernel_function(X, object$X,
-                               kernel.type = object$kernel,
-                               gamma = object$gamma,
-                               degree = object$degree,
-                               coef0 = object$coef0)
+    if (reduce_flag) { Xmap <- kernel_config$reduce_set } else { Xmap <- model_specs$X }
+    KernelX <- kernel_function(X, Xmap,
+                               kernel.type = kernel_config$kernel,
+                               gamma       = kernel_config$gamma,
+                               degree      = kernel_config$degree,
+                               coef0       = kernel_config$coef0)
   }
-  if (object$fit_intercept == TRUE) {
+
+  if (model_specs$fit_intercept == TRUE) {
     KernelX <- cbind(KernelX, 1)
   }
-  f <- KernelX %*% (object$coef1 + object$coef2) / 2
+
+  f <- KernelX %*% (model_coef$coef1 + model_coef$coef2) / 2
   return(f)
 }
 
@@ -122,22 +147,28 @@ predict.TSVRRegressor <- function(object, X, ...) {
 #' @param ... unused parameter.
 #' @importFrom graphics abline grid points
 #' @export
-plot.TSVRRegressor <- function(x, ...) {
-  xp <- ncol(x$X)
-  xlim_c <- c(min(x$X[,1]), max(x$X[, 1]))
-  ylim_c <- c(min(x$y), max(x$y))
-  idx1sv <- which(x$solver.res$lag1 != 0)
-  idx2sv <- which(x$solver.res$lag2 != 0)
-  idxsv <- union(idx1sv, idx2sv)
+plot.TSVMRegressor <- function(x, ...) {
+
+  model_specs   <- x$model_specs
+  model_coef    <- x$model_coef
+  kernel_config <- x$kernel_config
+
+  X             <- x$model_specs$X
+  y             <- model_specs$y
+  coef1         <- model_coef$coef1
+  coef2         <- model_coef$coef2
+
+  xp <- ncol(X)
+  xlim_c <- c(min(X[,1]), max(X[, 1]))
+  ylim_c <- c(min(y), max(y))
   if (xp == 1) {
-    plot(x$X, x$y, xlim = xlim_c, ylim = ylim_c,
+    plot(X, y, xlim = xlim_c, ylim = ylim_c,
          xlab = "x", ylab = "y")
     grid(lwd = 2,col = "grey")
-    points(x$X[idxsv], x$y[idxsv], col = "red")
-    abline(x$coef1[2], x$coef1[1], col = "blue")
-    abline(x$coef1[2] + x$epsilon1, x$coef1[1], col = "blue", lty = 2)
-    abline(x$coef2[2], x$coef2[1], col = "blue")
-    abline(x$coef2[2] - x$epsilon2, x$coef2[1], col = "blue", lty = 2)
-    abline((x$coef1[2] + x$coef2[2]) / 2, (x$coef1[1] + x$coef2[1]) / 2, col = "black")
+    abline(coef1[2], coef1[1], col = "blue")
+    abline(coef1[2] - model_specs$epsilon1, coef1[1], col = "blue", lty = 2)
+    abline(coef2[2], coef2[1], col = "blue")
+    abline(coef2[2] + model_specs$epsilon2, coef2[1], col = "blue", lty = 2)
+    abline((coef1[2] + coef2[2]) / 2, (coef1[1] + coef2[1]) / 2, col = "black")
   }
 }
