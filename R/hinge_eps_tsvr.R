@@ -141,7 +141,7 @@ predict.EPSTSVMRegressor <- function(object, X, ...) {
     KernelX <- cbind(KernelX, 1)
   }
 
-  f <- KernelX %*% (object$coef1 + object$coef2) / 2
+  f <- KernelX %*% (model_coef$coef1 + model_coef$coef2) / 2
   return(f)
 }
 
@@ -165,7 +165,6 @@ plot.EPSTSVMRegressor <- function(x, ...) {
   coef2         <- model_coef$coef2
 
   xp <- ncol(X)
-  print(coef1)
   xlim_c <- c(min(X[,1]), max(X[, 1]))
   ylim_c <- c(min(y), max(y))
   if (xp == 1) {
