@@ -45,20 +45,21 @@ ls_tsvm <- function(X, y, C1 = 1, C2 = C1,
                     gamma = 1 / ncol(X), degree = 3, coef0 = 0,
                     fit_intercept = TRUE, reduce_set = NULL) {
 
-  X <- as.matrix(X)
-  y <- as.matrix(y)
-
+  X         <- as.matrix(X)
+  y         <- as.matrix(y)
   class_set <- sort(unique(y))
-  idx <- which(y == class_set[1])
-  y[idx] <- -1
-  y[-idx] <- 1
-  y <- as.matrix(as.numeric(y))
-  if (length(class_set) > 2) {
-    stop("The number of class should less 2!")
+  idx       <- which(y == class_set[1])
+  y[idx]    <- 1
+  y[-idx]   <- -1
+  y         <- as.matrix(as.numeric(y))
+
+  if (length(class_set) != 2) {
+    stop("This model only supports binary classification; y must have exactly two classes")
   }
 
-  kernel <- match.arg(kernel)
+  kernel  <- match.arg(kernel)
   KernelR <- NULL
+
   if (kernel != "linear") {
     kso <- kernel_select_option_(X, kernel, reduce_set, gamma, degree, coef0)
     KernelX <- kso$KernelX

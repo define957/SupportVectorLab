@@ -67,8 +67,8 @@ hinge_tsvm <- function(X, y, C1 = 1, C2 = C1,
   y         <- as.matrix(y)
   class_set <- sort(unique(y))
   idx       <- which(y == class_set[1])
-  y[idx]    <- -1
-  y[-idx]   <- 1
+  y[idx]    <- 1
+  y[-idx]   <- -1
   y         <- as.matrix(as.numeric(y))
 
   if (length(class_set) != 2) {
