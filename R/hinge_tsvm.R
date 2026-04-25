@@ -156,8 +156,8 @@ predict.TSVMClassifier <- function(object, X, values = FALSE, ...) {
     decf          <- apply(cbind(fx1, fx2), 1, which.min)
     idx_pos       <- which(decf == 1)
     idx_neg       <- which(decf == 2)
-    decf[idx_pos] <- model_specs$class_set[2]
-    decf[idx_neg] <- model_specs$class_set[1]
+    decf[idx_pos] <- model_specs$class_set[1]
+    decf[idx_neg] <- model_specs$class_set[2]
   } else {
     dec_values1   <- fx1
     dec_values2   <- fx2
