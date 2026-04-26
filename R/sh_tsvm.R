@@ -57,7 +57,7 @@ sh_tsvm_dual_solver <- function(KernelX, idx, C1, C2, eps, max.steps) {
 #' @param reduce_set reduce set for reduce SVM, default \code{reduce_set = NULL}.
 #' @return return \code{TSVMClassifier} object.
 #' @export
-sh_tsvm <- function(X, y, C1 = 1, C2 = 1,
+sh_tsvm <- function(X, y, C1 = 1, C2 = C1,
                     kernel = c("linear", "rbf", "poly"),
                     gamma = 1 / ncol(X), degree = 3, coef0 = 0,
                     eps = 1e-5, max.steps = 4000,
