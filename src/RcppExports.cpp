@@ -68,6 +68,23 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// arma_lsvm_optimizer
+Rcpp::List arma_lsvm_optimizer(const arma::mat& H, const arma::mat& Hinv, const arma::vec& q, double eps, int max_steps, arma::vec u, double beta);
+RcppExport SEXP _SupportVectorLab_arma_lsvm_optimizer(SEXP HSEXP, SEXP HinvSEXP, SEXP qSEXP, SEXP epsSEXP, SEXP max_stepsSEXP, SEXP uSEXP, SEXP betaSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const arma::mat& >::type H(HSEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type Hinv(HinvSEXP);
+    Rcpp::traits::input_parameter< const arma::vec& >::type q(qSEXP);
+    Rcpp::traits::input_parameter< double >::type eps(epsSEXP);
+    Rcpp::traits::input_parameter< int >::type max_steps(max_stepsSEXP);
+    Rcpp::traits::input_parameter< arma::vec >::type u(uSEXP);
+    Rcpp::traits::input_parameter< double >::type beta(betaSEXP);
+    rcpp_result_gen = Rcpp::wrap(arma_lsvm_optimizer(H, Hinv, q, eps, max_steps, u, beta));
+    return rcpp_result_gen;
+END_RCPP
+}
 // cpp_chol_solve
 SEXP cpp_chol_solve(arma::mat A, arma::mat b);
 RcppExport SEXP _SupportVectorLab_cpp_chol_solve(SEXP ASEXP, SEXP bSEXP) {
@@ -97,6 +114,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_SupportVectorLab_cpp_rbf_kernel", (DL_FUNC) &_SupportVectorLab_cpp_rbf_kernel, 4},
     {"_SupportVectorLab_cpp_linear_kernel", (DL_FUNC) &_SupportVectorLab_cpp_linear_kernel, 2},
     {"_SupportVectorLab_cpp_poly_kernel", (DL_FUNC) &_SupportVectorLab_cpp_poly_kernel, 4},
+    {"_SupportVectorLab_arma_lsvm_optimizer", (DL_FUNC) &_SupportVectorLab_arma_lsvm_optimizer, 7},
     {"_SupportVectorLab_cpp_chol_solve", (DL_FUNC) &_SupportVectorLab_cpp_chol_solve, 2},
     {"_SupportVectorLab_cpp_inverse_spd", (DL_FUNC) &_SupportVectorLab_cpp_inverse_spd, 1},
     {NULL, NULL, 0}
