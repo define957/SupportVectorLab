@@ -17,8 +17,8 @@ cpp_poly_kernel <- function(x1, x2, degree, coef0) {
     .Call(`_SupportVectorLab_cpp_poly_kernel`, x1, x2, degree, coef0)
 }
 
-arma_lsvm_optimizer <- function(H, Hinv, q, eps, max_steps, u, beta) {
-    .Call(`_SupportVectorLab_arma_lsvm_optimizer`, H, Hinv, q, eps, max_steps, u, beta)
+arma_lsvm_optimizer <- function(H_left, H_right, a, A, B, q, eps, max_steps, u, beta) {
+    .Call(`_SupportVectorLab_arma_lsvm_optimizer`, H_left, H_right, a, A, B, q, eps, max_steps, u, beta)
 }
 
 cpp_chol_solve <- function(A, b) {
