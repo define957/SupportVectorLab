@@ -1,7 +1,7 @@
 hinge_tsvm_dual_solver <- function(KernelX, idx, C1, C2, eps, max.steps) {
 
-  H  <- KernelX[-idx, , drop = FALSE]
-  G  <- KernelX[idx, , drop = FALSE]
+  H  <- KernelX[idx, , drop = FALSE]
+  G  <- KernelX[-idx, , drop = FALSE]
   Hn <- nrow(H)
   Gn <- nrow(G)
 
@@ -156,8 +156,8 @@ predict.TSVMClassifier <- function(object, X, values = FALSE, ...) {
     decf          <- apply(cbind(fx1, fx2), 1, which.min)
     idx_pos       <- which(decf == 1)
     idx_neg       <- which(decf == 2)
-    decf[idx_pos] <- model_specs$class_set[2]
-    decf[idx_neg] <- model_specs$class_set[1]
+    decf[idx_pos] <- model_specs$class_set[1]
+    decf[idx_neg] <- model_specs$class_set[2]
   } else {
     dec_values1   <- fx1
     dec_values2   <- fx2
@@ -183,8 +183,8 @@ plot.TSVMClassifier <- function(x, ...) {
   coef2 <- model_coef$coef2
   class_set <- model_specs$class_set
   idx <- which(y == class_set[1])
-  y[idx] <- -1
-  y[-idx] <- 1
+  y[idx] <-  1
+  y[-idx] <- -1
   xlim_c <- c(min(model_specs$X[,1]), max(model_specs$X[, 1]))
   ylim_c <- c(min(model_specs$X[,2]), max(model_specs$X[, 2]))
   if (length(coef1) == 3 && length(coef2) == 3) {

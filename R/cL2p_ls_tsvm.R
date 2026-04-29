@@ -12,8 +12,8 @@ cL2p_ls_tsvm_dual_solver <- function(KernelX, idx, C1, C2,
     return(as.vector(weight_elem))
   }
 
-  H     <- KernelX[-idx, , drop = FALSE]
-  G     <- KernelX[idx, , drop = FALSE]
+  H     <- KernelX[idx, , drop = FALSE]
+  G     <- KernelX[-idx, , drop = FALSE]
   Hn    <- nrow(H)
   Gn    <- nrow(G)
   xp    <- ncol(KernelX)
