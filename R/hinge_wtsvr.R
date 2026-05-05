@@ -94,10 +94,10 @@ hinge_wtsvr <- function(X, y, C1 = 1, C2 = C1,
   }
 
   if (!is.null(weight_f1)) {
-    D1 <- do.call(weight_f1, weight_option1)
+    D1 <- do.call(weight_f1, append(list("X" = X, "y" = y), weight_option1))
   }
   if (!is.null(weight_f2)) {
-    D1 <- do.call(weight_f2, weight_option2)
+    D2 <- do.call(weight_f2, append(list("X" = X, "y" = y), weight_option2))
   }
   solver.res <- hinge_wtsvr_dual_solver(KernelX, y, D1, D2, C1, C2, epsilon1, epsilon2,
                                         eps, max.steps)
