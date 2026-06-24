@@ -89,36 +89,40 @@ hinge_svm_primal_solver <- function(KernelX, X, y, C,
 #' @param ... unused parameters.
 #' @return return \code{SVMClassifier} object.
 #' @export
-hinge_svm <- function(X, y, C = 1, kernel = c("linear", "rbf", "poly"),
+hinge_svm <- function(X, y, C = 1, kernel = c("linear", "rbf", "poly", "precomputed"),
                       gamma = 1 / ncol(X), degree = 3, coef0 = 0,
                       eps = 1e-5, max.steps = 4000, batch_size = nrow(X) / 10,
                       solver = c("dual", "primal"),
                       fit_intercept = TRUE, optimizer = pegasos,
                       reduce_set = NULL, dual_optimizer = clip_dcd_optimizer,
                       dual_optimizer_option = NULL, ...) {
+
   X <- as.matrix(X)
   y <- as.matrix(y)
-  class_set <- sort(unique(y))
-  idx <- which(y == class_set[1])
-  y[idx] <- 1
-  y[-idx] <- -1
-  y <- as.matrix(as.numeric(y))
-  if (length(class_set) > 2) {
-    stop("The number of class should less 2!")
-  }
+
   kernel <- match.arg(kernel)
   solver <- match.arg(solver)
-  if (fit_intercept == TRUE) {
-    X <- cbind(X, 1)
+
+  labels <- encode_binary_labels(y)
+  y      <- labels$y
+  class_set <- labels$class_set
+
+  reduce_res   <- resolve_reduce_set(reduce_set, solver)
+  reduce_set   <- reduce_res$reduce_set
+  reduce_flag  <- reduce_res$reduce_flag
+
+  if (kernel == "precomputed" && isTRUE(fit_intercept)) {
+    # message("fit_intercept is ignored with precomputed kernel.")
+    fit_intercept <- FALSE
   }
-  reduce_flag <- is.null(reduce_set) == FALSE
-  if (solver == "dual" && reduce_flag == TRUE) {
-    reduce_flag <- FALSE
-    reduce_set <- NULL
-    cat("The dual solver does not support the reduce set; it has been set to NULL.\n")
-  }
-  kso <- kernel_select_option_(X, kernel, reduce_set, gamma, degree, coef0)
-  KernelX <- kso$KernelX
+
+  X <- handle_intercept(X, fit_intercept)
+
+  KernelX <- resolve_kernel_matrix(X, kernel, reduce_set,
+                                   gamma, degree, coef0)
+
+  batch_size <- resolve_batch_size(batch_size, nrow(X), solver)
+
   if (solver == "primal") {
     solver.res <- hinge_svm_primal_solver(KernelX, X, y, C,
                                           max.steps, batch_size,
@@ -206,7 +210,9 @@ predict.SVMClassifier <- function(object, X, values = FALSE, ...) {
   if (object$fit_intercept == TRUE) {
     X <- cbind(X, 1)
   }
-  if (object$kernel == "linear" && object$solver == "primal") {
+  if (object$kernel == "precomputed") {
+    KernelX <- X
+  } else if (object$kernel == "linear" && object$solver == "primal") {
     KernelX <- X
   } else {
     if (is.null(object$reduce_flag) == FALSE && object$reduce_flag == TRUE) {
@@ -234,6 +240,9 @@ predict.SVMClassifier <- function(object, X, values = FALSE, ...) {
 }
 
 calculate_svm_H <- function(KernelX, y) {
-  H <- (y %*% t(y))*KernelX
+  H <- KernelX
+  idx_pos <- which(y == 1L)
+  H[idx_pos, -idx_pos] <- -H[idx_pos, -idx_pos]
+  H[-idx_pos, idx_pos] <- -H[-idx_pos, idx_pos]
   return(H)
 }
