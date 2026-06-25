@@ -8,7 +8,7 @@ sh_svm(
   X,
   y,
   C = 1,
-  kernel = c("linear", "rbf", "poly"),
+  kernel = c("linear", "rbf", "poly", "precomputed"),
   gamma = 1/ncol(X),
   degree = 3,
   coef0 = 0,
