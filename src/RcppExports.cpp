@@ -11,6 +11,21 @@ Rcpp::Rostream<true>&  Rcpp::Rcout = Rcpp::Rcpp_cout_get();
 Rcpp::Rostream<false>& Rcpp::Rcerr = Rcpp::Rcpp_cerr_get();
 #endif
 
+// cpp_conjugate_gradient_method
+arma::vec cpp_conjugate_gradient_method(arma::mat A, arma::vec b, arma::vec x, const double eps, const unsigned int max_steps);
+RcppExport SEXP _SupportVectorLab_cpp_conjugate_gradient_method(SEXP ASEXP, SEXP bSEXP, SEXP xSEXP, SEXP epsSEXP, SEXP max_stepsSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< arma::mat >::type A(ASEXP);
+    Rcpp::traits::input_parameter< arma::vec >::type b(bSEXP);
+    Rcpp::traits::input_parameter< arma::vec >::type x(xSEXP);
+    Rcpp::traits::input_parameter< const double >::type eps(epsSEXP);
+    Rcpp::traits::input_parameter< const unsigned int >::type max_steps(max_stepsSEXP);
+    rcpp_result_gen = Rcpp::wrap(cpp_conjugate_gradient_method(A, b, x, eps, max_steps));
+    return rcpp_result_gen;
+END_RCPP
+}
 // cpp_clip_dcd_optimizer
 Rcpp::List cpp_clip_dcd_optimizer(const arma::mat& H, const arma::vec& q, const arma::vec& lb, const arma::vec& ub, const double eps, unsigned int max_steps, arma::vec u);
 RcppExport SEXP _SupportVectorLab_cpp_clip_dcd_optimizer(SEXP HSEXP, SEXP qSEXP, SEXP lbSEXP, SEXP ubSEXP, SEXP epsSEXP, SEXP max_stepsSEXP, SEXP uSEXP) {
@@ -113,6 +128,7 @@ END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
+    {"_SupportVectorLab_cpp_conjugate_gradient_method", (DL_FUNC) &_SupportVectorLab_cpp_conjugate_gradient_method, 5},
     {"_SupportVectorLab_cpp_clip_dcd_optimizer", (DL_FUNC) &_SupportVectorLab_cpp_clip_dcd_optimizer, 7},
     {"_SupportVectorLab_cpp_rbf_kernel", (DL_FUNC) &_SupportVectorLab_cpp_rbf_kernel, 4},
     {"_SupportVectorLab_cpp_linear_kernel", (DL_FUNC) &_SupportVectorLab_cpp_linear_kernel, 2},
