@@ -127,18 +127,22 @@ conjugate_gradient_method <- function(A, b, x, max.steps, eps = 1e-5, ...) {
   rk <- b - A%*%x
   pk <- rk
   for (t in 1:max.steps) {
-    rk2 <- (t(rk) %*% rk)
-    alphak <-  as.numeric(rk2 / (t(pk) %*% A %*% pk))
+    rk2 <- crossprod(rk)
+    Apk <- A %*% pk
+    alphak <-  as.numeric(rk2 / (t(pk) %*% Apk))
     x <- x + alphak*pk
-    rk_1 <- rk - alphak*(A%*%pk)
+    rk_1 <- rk - alphak*(Apk)
     if (norm(rk_1, type = "2") < eps) {
-      cat("converge after", t, "steps", "\n")
+      message("converge after ", t, " steps. ", "\n")
       break
     } else {
       betak <- as.numeric((t(rk_1) %*% rk_1) / rk2)
       pk <- rk_1 + betak*pk
     }
     rk <- rk_1
+  }
+  if (t == max.steps) {
+    warning("Conjugate gradient did not converge within ", max.steps, " steps.")
   }
   return(x)
 }
