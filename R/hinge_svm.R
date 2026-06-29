@@ -136,6 +136,11 @@ hinge_svm <- function(X, y, C = 1, kernel = c("linear", "rbf", "poly", "precompu
     solver.res <- hinge_svm_dual_solver(KernelX, y, C,
                                         dual_optimizer, dual_optimizer_option)
   }
+
+  if (kernel == "precomputed") {
+    X <- NULL
+  }
+
   SVMClassifier <- list("X" = X, "y" = y,
                         "reduce_flag" = reduce_flag,
                         "reduce_set" = reduce_set,
@@ -187,11 +192,14 @@ plot.SVMClassifier <- function(x, ...) {
 #' @importFrom stats coef
 #' @export
 coef.SVMClassifier <- function(object, ...) {
-  if (object$solver == "dual") {
-    return(t(object$X) %*% object$coef)
-  } else if (object$solver == "primal") {
+    if (object$solver == "primal") {
+      return(object$coef)
+    }
+    # dual solver
+    if (object$kernel == "linear") {
+      return(crossprod(object$X, object$coef))
+    }
     return(object$coef)
-  }
 }
 
 #' Predict Method for Support Vector Machine
