@@ -4,18 +4,16 @@
 \alias{conjugate_gradient_method}
 \title{Conjugate Gradient Method for Solving Linear Equation Ax = b}
 \usage{
-conjugate_gradient_method(A, b, x, max.steps, eps = 1e-05, ...)
+conjugate_gradient_method(A, b, x0, eps = 1e-05, max.steps = 2 * nrow(A))
 }
 \arguments{
 \item{A, b}{matrix of linear equation Ax = b (Since A is a PSD matrix).}
 
-\item{x}{initial point.}
-
-\item{max.steps}{the number of iterations to solve the optimization problem.}
+\item{x0}{initial point.}
 
 \item{eps}{the precision of the optimization algorithm.}
 
-\item{...}{additional settings for the sub-gradient.}
+\item{max.steps}{the number of iterations to solve the optimization problem.}
 }
 \value{
 return optimal solution.

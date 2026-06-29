@@ -117,27 +117,27 @@ rmsprop <- function(X, y, w, m, max.steps, fx, pars,
 #'
 #' @author Zhang Jiaqi.
 #' @param A,b matrix of linear equation Ax = b (Since A is a PSD matrix).
-#' @param x initial point.
-#' @param max.steps the number of iterations to solve the optimization problem.
+#' @param x0 initial point.
 #' @param eps the precision of the optimization algorithm.
-#' @param ... additional settings for the sub-gradient.
+#' @param max.steps the number of iterations to solve the optimization problem.
 #' @return return optimal solution.
 #' @export
-conjugate_gradient_method <- function(A, b, x, max.steps, eps = 1e-5, ...) {
-  rk <- b - A%*%x
+conjugate_gradient_method <- function(A, b, x0, eps = 1e-5, max.steps = 2*nrow(A)) {
+  x  <- x0
+  rk <- b - A %*% x
   pk <- rk
   for (t in 1:max.steps) {
     rk2 <- crossprod(rk)
     Apk <- A %*% pk
     alphak <-  as.numeric(rk2 / (t(pk) %*% Apk))
-    x <- x + alphak*pk
-    rk_1 <- rk - alphak*(Apk)
+    x <- x + alphak * pk
+    rk_1 <- rk - alphak * (Apk)
     if (norm(rk_1, type = "2") < eps) {
-      message("converge after ", t, " steps. ", "\n")
+      cat("converge after ", t, " steps. ", "\n")
       break
     } else {
       betak <- as.numeric((t(rk_1) %*% rk_1) / rk2)
-      pk <- rk_1 + betak*pk
+      pk <- rk_1 + betak * pk
     }
     rk <- rk_1
   }
