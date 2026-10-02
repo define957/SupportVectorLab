@@ -57,7 +57,7 @@ hinge_eps_tsvr_dual_solver <- function(KernelX, y, C1, C2, C3, C4, epsilon1, eps
 #' @param fit_intercept if set \code{fit_intercept = TRUE},
 #'                      the function will evaluates intercept.
 #' @param reduce_set reduce set for reduce SVM, default \code{reduce_set = NULL}.
-#' @return return \code{TSVRClassifier} object.
+#' @return return \code{EPSTSVMRegressor} object.
 #' @export
 hinge_eps_tsvr <- function(X, y, C1 = 1, C2 = C1, C3 = 1e-7, C4 = C3,
                        epsilon1 = 0.1, epsilon2 = epsilon1,
