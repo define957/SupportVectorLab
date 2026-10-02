@@ -205,3 +205,16 @@ plot.TSVMClassifier <- function(x, ...) {
     }
   }
 }
+
+#' Coef Method for Twin Support Vector Machine
+#'
+#' @author Zhang Jiaqi
+#' @param object a fitted object of class inheriting from \code{TSVMClassifier}.
+#' @param ... unused parameter.
+#' @importFrom stats coef
+#' @export
+coef.TSVMClassifier <- function(object, ...) {
+  coef_mat <- cbind(object$model_coef$coef1, object$model_coef$coef2)
+  colnames(coef_mat) <- c("coef-1", "coef-2")
+  coef_mat
+}
