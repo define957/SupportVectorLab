@@ -1,5 +1,5 @@
 ls_svr_dual_solver <- function(KernelX, y, C = 1) {
-  coef <- cholsolve(KernelX + diag(1/C, nrow = ncol(KernelX)), y)
+  coef <- solve(KernelX + diag(1/C, nrow = ncol(KernelX)), y)
   BaseDualLSSVMRegressor <- list(coef = as.matrix(coef))
   class(BaseDualLSSVMRegressor) <- "BaseDualLSSVMRegressor"
   return(BaseDualLSSVMRegressor)

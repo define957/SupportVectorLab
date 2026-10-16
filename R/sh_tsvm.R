@@ -7,7 +7,7 @@ sh_tsvm_dual_solver <- function(KernelX, idx, C1, C2, eps, max.steps) {
 
   HTH        <- t(H) %*% H
   diag(HTH)  <- diag(HTH) + 1e-7
-  invHTH_GT  <- cholsolve(HTH, t(G))
+  invHTH_GT  <- solve(HTH, t(G))
   dualH1     <- G %*% invHTH_GT + diag(1/C1, Gn)
   dualq1     <- matrix(1, Gn)
   duallb1    <- matrix(0, Gn)
@@ -19,7 +19,7 @@ sh_tsvm_dual_solver <- function(KernelX, idx, C1, C2, eps, max.steps) {
 
   GTG        <- t(G) %*% G
   diag(GTG)  <- diag(GTG) + 1e-7
-  invGTG_HT  <- cholsolve(GTG, t(H))
+  invGTG_HT  <- solve(GTG, t(H))
   dualH2     <- H %*% invGTG_HT + diag(1/C2, Hn)
   dualq2     <- matrix(1, Hn)
   duallb2    <- matrix(0, Hn)

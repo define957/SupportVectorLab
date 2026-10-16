@@ -1,7 +1,7 @@
 ls_svm_dual_solver <- function(KernelX, y, C) {
   H <- calculate_svm_H(KernelX, y)
   m <- nrow(KernelX)
-  u <- cholsolve((H + diag(1/C, m)), matrix(1, nrow = m))
+  u <- solve((H + diag(1/C, m)), matrix(1, nrow = m))
   coef <- y*u
   BaseDualLeastSquaresSVMClassifier <- list(coef = as.matrix(coef))
   class(BaseDualLeastSquaresSVMClassifier) <- "BaseDualLeastSquaresSVMClassifier"
