@@ -1,2 +1,1 @@
-PKG_CXXFLAGS = -fopenmp
 PKG_LIBS = -fopenmp $(LAPACK_LIBS) $(BLAS_LIBS) $(FLIBS)
