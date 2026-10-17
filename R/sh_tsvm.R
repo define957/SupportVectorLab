@@ -5,29 +5,31 @@ sh_tsvm_dual_solver <- function(KernelX, idx, C1, C2, eps, max.steps) {
   Hn <- nrow(H)
   Gn <- nrow(G)
 
-  HTH        <- t(H) %*% H
-  diag(HTH)  <- diag(HTH) + 1e-7
-  invHTH_GT  <- solve(HTH, t(G))
-  dualH1     <- G %*% invHTH_GT + diag(1/C1, Gn)
-  dualq1     <- matrix(1, Gn)
-  duallb1    <- matrix(0, Gn)
-  dualub1    <- matrix(Inf, Gn)
-  u01        <- matrix(0, Gn)
-  dual_coef1 <- clip_dcd_optimizer(dualH1, dualq1, duallb1, dualub1,
+  HTH          <- crossprod(H)
+  diag(HTH)    <- diag(HTH) + 1e-7
+  invHTH_GT    <- solve(HTH, t(G))
+  dualH1       <- G %*% invHTH_GT
+  diag(dualH1) <- diag(dualH1) + 1/C1
+  dualq1       <- matrix(1, Gn)
+  duallb1      <- matrix(0, Gn)
+  dualub1      <- matrix(Inf, Gn)
+  u01          <- matrix(0, Gn)
+  dual_coef1   <- clip_dcd_optimizer(dualH1, dualq1, duallb1, dualub1,
                                    eps, max.steps, u01)$x
-  coef1      <- -invHTH_GT %*% dual_coef1
+  coef1        <- -invHTH_GT %*% dual_coef1
 
-  GTG        <- t(G) %*% G
-  diag(GTG)  <- diag(GTG) + 1e-7
-  invGTG_HT  <- solve(GTG, t(H))
-  dualH2     <- H %*% invGTG_HT + diag(1/C2, Hn)
-  dualq2     <- matrix(1, Hn)
-  duallb2    <- matrix(0, Hn)
-  dualub2    <- matrix(Inf, Hn)
-  u02        <- matrix(0, Hn)
-  dual_coef2 <- clip_dcd_optimizer(dualH2, dualq2, duallb2, dualub2,
+  GTG          <- crossprod(G)
+  diag(GTG)    <- diag(GTG) + 1e-7
+  invGTG_HT    <- solve(GTG, t(H))
+  dualH2       <- H %*% invGTG_HT
+  diag(dualH2) <- diag(dualH2) + 1/C2
+  dualq2       <- matrix(1, Hn)
+  duallb2      <- matrix(0, Hn)
+  dualub2      <- matrix(Inf, Hn)
+  u02          <- matrix(0, Hn)
+  dual_coef2   <- clip_dcd_optimizer(dualH2, dualq2, duallb2, dualub2,
                                    eps, max.steps, u02)$x
-  coef2      <- invGTG_HT %*% dual_coef2
+  coef2        <- invGTG_HT %*% dual_coef2
 
   BaseDualSquaredHingeTSVMClassifier <- list("coef1" = as.matrix(coef1),
                                              "coef2" = as.matrix(coef2))

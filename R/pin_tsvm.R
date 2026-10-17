@@ -5,7 +5,7 @@ pin_tsvm_dual_solver <- function(KernelX, idx, C1, C2, tau1, tau2, eps, max.step
   Hn <- nrow(H)
   Gn <- nrow(G)
 
-  HTH        <- t(H) %*% H
+  HTH        <- crossprod(H)
   diag(HTH)  <- diag(HTH) + 1e-7
   invHTH_GT  <- solve(HTH, t(G))
   dualH1     <- G %*% invHTH_GT
@@ -21,7 +21,7 @@ pin_tsvm_dual_solver <- function(KernelX, idx, C1, C2, tau1, tau2, eps, max.step
                                    eps, max.steps, u01)$x
   coef1      <- -invHTH_GT %*% dual_coef1
 
-  GTG        <- t(G) %*% G
+  GTG        <- crossprod(G)
   diag(GTG)  <- diag(GTG) + 1e-7
   invGTG_HT  <- solve(GTG, t(H))
   dualH2     <- H %*% invGTG_HT

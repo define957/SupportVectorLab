@@ -27,14 +27,14 @@ closs_tbsvm_dual_solver <- function(KernelX, idx, C1, C2, C3, C4,
   coef1 <- matrix(0, xp)
   coef2 <- matrix(0, xp)
 
-  HTH <- t(H) %*% H
-  GTG <- t(G) %*% G
+  HTH <- crossprod(H)
+  GTG <- crossprod(G)
 
   for (i in 1:hq.steps) {
-    G_omega_lam_T <-  t(G*(Omegavec1*C1_))
-    A             <-  HTH + G_omega_lam_T %*% G
-    diag(A)       <-  diag(A) + C3
-    coef1_new     <- -solve((A), G_omega_lam_T %*% e2)
+    G_omega_lam   <- G*(Omegavec1*C1_)
+    A             <- HTH + crossprod(G_omega_lam, G)
+    diag(A)       <- diag(A) + C3
+    coef1_new     <- -solve((A), crossprod(G_omega_lam, e2))
     if (norm(coef1_new - coef1, type = "2") < eps.hq) {
       coef1 <- coef1_new
       break
@@ -45,10 +45,10 @@ closs_tbsvm_dual_solver <- function(KernelX, idx, C1, C2, C3, C4,
   }
 
   for (i in 1:hq.steps) {
-    H_omega_lam_T <- t(H*(Omegavec2*C2_))
-    B             <-  GTG + H_omega_lam_T %*% H
-    diag(B)       <-  diag(B) + C4
-    coef2_new     <- solve((B), H_omega_lam_T %*% e1)
+    H_omega_lam   <- H*(Omegavec2*C2_)
+    B             <- GTG + crossprod(H_omega_lam, H)
+    diag(B)       <- diag(B) + C4
+    coef2_new     <- solve((B), crossprod(H_omega_lam, e1))
     if (norm(coef2_new - coef2, type = "2") < eps.hq) {
       coef2 <- coef2_new
       break

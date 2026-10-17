@@ -27,13 +27,13 @@ cL2p_ls_tsvm_dual_solver <- function(KernelX, idx, C1, C2,
   coef1 <- matrix(0, xp)
   coef2 <- matrix(0, xp)
 
-  HTH   <- t(H) %*% H
-  GTG   <- t(G) %*% G
-  HT_e1 <- t(H) %*% e1
-  GT_e2 <- t(G) %*% e2
+  HTH   <- crossprod(H)
+  GTG   <- crossprod(G)
+  HT_e1 <- crossprod(H, e1)
+  GT_e2 <- crossprod(G, e2)
 
   for (i in 1:irls.steps) {
-    A         <- t(H*(Fvec/C1)) %*% H + GTG
+    A         <- crossprod(H*(Fvec/C1), H) + GTG
     diag(A)   <- diag(A) + 1e-7
     coef1_new <- -solve(A, GT_e2)
     if (norm(coef1_new - coef1, type = "2") < eps.irls) {
@@ -45,7 +45,7 @@ cL2p_ls_tsvm_dual_solver <- function(KernelX, idx, C1, C2,
   }
 
   for (i in 1:irls.steps) {
-    B         <- t(G*(Dvec/C2)) %*% G + HTH
+    B         <- crossprod(G*(Dvec/C2), G) + HTH
     diag(B)   <- diag(B) + 1e-7
     coef2_new <- solve(B, HT_e1)
     if (norm(coef2_new - coef2, type = "2") < eps.irls) {
