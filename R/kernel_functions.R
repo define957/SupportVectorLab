@@ -1,9 +1,9 @@
 r_linear_kernel <- function(x1, x2) {
-  return(x1 %*% t(x2))
+  return(tcrossprod(x1, x2))
 }
 
 r_poly_kernel <- function(x1, x2, gamma, degree = 3, coef0 = 0) {
-  K <- (gamma * x1 %*% t(x2) + coef0)^(degree)
+  K <- (gamma * tcrossprod(x1, x2) + coef0)^(degree)
   return(K)
 }
 
@@ -21,7 +21,7 @@ r_rbf_kernel <- function(x1, x2, gamma= 1/ncol(x2), symmetric = FALSE) {
     norms2 <- norms1
     e1 <- e2
   }
-  K <- exp(gamma*(-norms1 %*% e1 - t(e2) %*% t(norms2) + 2*(x1 %*% t(x2))))
+  K <- exp(gamma*(-norms1 %*% e1 - t(e2) %*% t(norms2) + 2*(tcrossprod(x1, x2))))
   return(K)
 }
 
