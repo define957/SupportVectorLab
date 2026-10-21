@@ -65,9 +65,13 @@ export(sh_tsvr)
 export(wave_svm)
 import(Rcpp)
 import(iterators)
-importFrom(graphics,abline)
-importFrom(graphics,grid)
-importFrom(graphics,points)
-importFrom(stats,coef)
-importFrom(stats,predict)
+importFrom(graphics,
+  abline,
+  grid,
+  points
+)
+importFrom(stats,
+  coef,
+  predict
+)
 useDynLib(SupportVectorLab, .registration=TRUE)

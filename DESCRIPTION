@@ -13,5 +13,4 @@ Imports: Rcpp (>= 1.0.10),
          iterators
 LinkingTo: Rcpp,
            RcppArmadillo
-Config/roxygen2/version: 8.0.0
-RoxygenNote: 7.3.2
+Config/roxygen2/version: 8.1.1
