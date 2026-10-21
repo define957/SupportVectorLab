@@ -5,11 +5,11 @@ hinge_w_eps_tsvr_dual_solver <- function(KernelX, y, D1, D2, C1, C2, C3, C4, eps
 
   G               <- KernelX
   GramGD1         <- t(G) %*% (D1*G)
-  GTD1G_C3_inv_GT <- cholsolve(GramGD1 + diag(C3, xp), t(G))
+  GTD1G_C3_inv_GT <- solve(GramGD1 + diag(C3, xp), t(G))
   dualH1          <- G %*% GTD1G_C3_inv_GT
 
   if (C3 != C4) {
-    GTD1G_C4_inv_GT <- cholsolve(GramGD1 + diag(C4, xp), t(G))
+    GTD1G_C4_inv_GT <- solve(GramGD1 + diag(C4, xp), t(G))
     dualH2          <- G %*% GTD1G_C4_inv_GT
   } else {
     GTD1G_C4_inv_GT <- GTD1G_C3_inv_GT

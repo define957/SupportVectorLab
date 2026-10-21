@@ -4,14 +4,14 @@ sh_eps_tsvr_dual_solver <- function(KernelX, y, C1, C2, C3, C4, epsilon1, epsilo
   xp <- ncol(KernelX)
 
   G             <- KernelX
-  GramG         <- t(G) %*% G
-  GTG_C3_inv_GT <- cholsolve(GramG + diag(C3, xp), t(G))
+  GramG         <- crossprod(G)
+  GTG_C3_inv_GT <- solve(GramG + diag(C3, xp), t(G))
   dualH1        <- G %*% GTG_C3_inv_GT
   dualH1_reg    <- dualH1
-  diag(dualH1_reg)  <- diag(dualH1_reg) + 1/C1 
+  diag(dualH1_reg)  <- diag(dualH1_reg) + 1/C1
 
   if (C3 != C4 || C1 != C2) {
-    GTG_C4_inv_GT <- cholsolve(GramG + diag(C4, xp), t(G))
+    GTG_C4_inv_GT <- solve(GramG + diag(C4, xp), t(G))
     dualH2        <- G %*% GTG_C4_inv_GT
     dualH2_reg    <- dualH2
     diag(dualH2_reg)  <- diag(dualH2_reg) + 1/C2

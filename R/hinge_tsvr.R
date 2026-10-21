@@ -3,7 +3,7 @@ hinge_tsvr_dual_solver <- function(KernelX, y, C1, C2, epsilon1, epsilon2,
   xn <- nrow(KernelX)
   xp <- ncol(KernelX)
   G <- KernelX
-  GTG_inv_G <- cholsolve(t(G) %*% G + diag(1e-7, xp), t(G))
+  GTG_inv_G <- solve(crossprod(G) + diag(1e-7, xp), t(G))
   dualH <- G %*% GTG_inv_G
 
   f <- as.matrix(y - epsilon1)

@@ -4,7 +4,7 @@ sh_tsvr_dual_solver <- function(KernelX, y, C1, C2, epsilon1, epsilon2,
   xp <- ncol(KernelX)
 
   G            <- KernelX
-  GTG_inv_G    <- cholsolve(t(G) %*% G + diag(1e-7, xp), t(G))
+  GTG_inv_G    <- solve(crossprod(G) + diag(1e-7, xp), t(G))
   dualH        <- G %*% GTG_inv_G
   dualH1       <- dualH
   dualH2       <- dualH
