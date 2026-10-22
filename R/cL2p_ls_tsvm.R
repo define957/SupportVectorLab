@@ -35,7 +35,7 @@ cL2p_ls_tsvm_dual_solver <- function(KernelX, idx, C1, C2,
   for (i in 1:irls.steps) {
     A         <- crossprod(H*(Fvec/C1), H) + GTG
     diag(A)   <- diag(A) + 1e-7
-    coef1_new <- -solve(A, GT_e2)
+    coef1_new <- -cholsolve(A, GT_e2)
     if (norm(coef1_new - coef1, type = "2") < eps.irls) {
       coef1 <- coef1_new
       break
@@ -47,7 +47,7 @@ cL2p_ls_tsvm_dual_solver <- function(KernelX, idx, C1, C2,
   for (i in 1:irls.steps) {
     B         <- crossprod(G*(Dvec/C2), G) + HTH
     diag(B)   <- diag(B) + 1e-7
-    coef2_new <- solve(B, HT_e1)
+    coef2_new <- cholsolve(B, HT_e1)
     if (norm(coef2_new - coef2, type = "2") < eps.irls) {
       coef2 <- coef2_new
       break

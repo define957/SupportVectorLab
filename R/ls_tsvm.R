@@ -11,8 +11,8 @@ ls_tsvm_dual_solver <- function(KernelX, idx, C1, C2) {
   diag(GTG) <- diag(GTG) + 1e-7
   e1        <- matrix(1, Hn)
   e2        <- matrix(1, Gn)
-  coef1     <- -solve(GTG + HTH/C1, crossprod(G, e2))
-  coef2     <-  solve(HTH + GTG/C2, crossprod(H, e1))
+  coef1     <- -cholsolve(GTG + HTH/C1, crossprod(G, e2))
+  coef2     <-  cholsolve(HTH + GTG/C2, crossprod(H, e1))
 
   BaseDualLeastSquaresTSVMClassifier <- list("coef1" = as.matrix(coef1),
                                              "coef2" = as.matrix(coef2))

@@ -34,7 +34,7 @@ closs_tbsvm_dual_solver <- function(KernelX, idx, C1, C2, C3, C4,
     G_omega_lam   <- G*(Omegavec1*C1_)
     A             <- HTH + crossprod(G_omega_lam, G)
     diag(A)       <- diag(A) + C3
-    coef1_new     <- -solve((A), crossprod(G_omega_lam, e2))
+    coef1_new     <- -cholsolve(A, crossprod(G_omega_lam, e2))
     if (norm(coef1_new - coef1, type = "2") < eps.hq) {
       coef1 <- coef1_new
       break
@@ -48,7 +48,7 @@ closs_tbsvm_dual_solver <- function(KernelX, idx, C1, C2, C3, C4,
     H_omega_lam   <- H*(Omegavec2*C2_)
     B             <- GTG + crossprod(H_omega_lam, H)
     diag(B)       <- diag(B) + C4
-    coef2_new     <- solve((B), crossprod(H_omega_lam, e1))
+    coef2_new     <- cholsolve(B, crossprod(H_omega_lam, e1))
     if (norm(coef2_new - coef2, type = "2") < eps.hq) {
       coef2 <- coef2_new
       break

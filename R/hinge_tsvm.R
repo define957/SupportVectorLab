@@ -14,7 +14,7 @@ hinge_tsvm_dual_solver <- function(
 
   HTH        <- crossprod(H)
   diag(HTH)  <- diag(HTH) + 1e-7
-  invHTH_GT  <- solve(HTH, t(G))
+  invHTH_GT  <- cholsolve(HTH, t(G))
   dualH1     <- G %*% invHTH_GT
   dualq1     <- matrix(1, Gn)
   duallb1    <- matrix(0, Gn)
@@ -26,7 +26,7 @@ hinge_tsvm_dual_solver <- function(
 
   GTG        <- crossprod(G)
   diag(GTG)  <- diag(GTG) + 1e-7
-  invGTG_HT  <- solve(GTG, t(H))
+  invGTG_HT  <- cholsolve(GTG, t(H))
   dualH2     <- H %*% invGTG_HT
   dualq2     <- matrix(1, Hn)
   duallb2    <- matrix(0, Hn)
