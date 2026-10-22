@@ -5,12 +5,8 @@
 #' @param b a vector or matrix giving the right-hand side(s).
 #' @export
 cholsolve <- function(a, b) {
-  Lt <- chol(a, pivot = T)
-  pivot <- attr(Lt, "pivot")
-  oo <- order(pivot)
-  x <- LLtsolve(Lt, b[pivot,])
-  dim(x) <- c(ncol(a), ncol(b))
-  x <- x[oo, ]
+  Lt <- chol(a)
+  x <- LLtsolve(Lt, b)
   return(x)
 }
 
