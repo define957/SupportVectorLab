@@ -1,6 +1,6 @@
 closs_tbsvm_dual_solver <- function(KernelX, idx, C1, C2, C3, C4,
                                     sigma1, sigma2,
-                                    eps.hq, hq.steps) {
+                                    eps.hq, hq.steps, method_ls) {
 
   update_omega <- function(f, sigma_sq) {
     return(as.vector(exp(-f^2/(2*sigma_sq))))
@@ -27,14 +27,21 @@ closs_tbsvm_dual_solver <- function(KernelX, idx, C1, C2, C3, C4,
   coef1 <- matrix(0, xp)
   coef2 <- matrix(0, xp)
 
-  HTH <- crossprod(H)
-  GTG <- crossprod(G)
+  if (method_ls == "normal-chol") {
+    HTH <- crossprod(H)
+    GTG <- crossprod(G)
+  }
 
   for (i in 1:hq.steps) {
     G_omega_lam   <- G*(Omegavec1*C1_)
-    A             <- HTH + crossprod(G_omega_lam, G)
-    diag(A)       <- diag(A) + C3
-    coef1_new     <- -cholsolve(A, crossprod(G_omega_lam, e2))
+    if (method_ls == "qr") {
+      coef1_new     <- -stack_qrsolve(rbind(H, sqrt(Omegavec1*C1_) * G),
+                                      crossprod(G_omega_lam, e2), C3)
+    } else if (method_ls == "normal-chol") {
+      A             <- HTH + crossprod(G_omega_lam, G)
+      diag(A)       <- diag(A) + C3
+      coef1_new     <- -cholsolve(A, crossprod(G_omega_lam, e2))
+    }
     if (norm(coef1_new - coef1, type = "2") < eps.hq) {
       coef1 <- coef1_new
       break
@@ -46,9 +53,14 @@ closs_tbsvm_dual_solver <- function(KernelX, idx, C1, C2, C3, C4,
 
   for (i in 1:hq.steps) {
     H_omega_lam   <- H*(Omegavec2*C2_)
-    B             <- GTG + crossprod(H_omega_lam, H)
-    diag(B)       <- diag(B) + C4
-    coef2_new     <- cholsolve(B, crossprod(H_omega_lam, e1))
+    if (method_ls == "qr") {
+      coef2_new     <- stack_qrsolve(rbind(G, sqrt(Omegavec2*C2_) * H),
+                                     crossprod(H_omega_lam, e1), C4)
+    } else if (method_ls == "normal-chol") {
+      B             <- GTG + crossprod(H_omega_lam, H)
+      diag(B)       <- diag(B) + C4
+      coef2_new     <- cholsolve(B, crossprod(H_omega_lam, e1))
+    }
     if (norm(coef2_new - coef2, type = "2") < eps.hq) {
       coef2 <- coef2_new
       break
@@ -85,6 +97,9 @@ closs_tbsvm_dual_solver <- function(KernelX, idx, C1, C2, C3, C4,
 #' @param fit_intercept if set \code{fit_intercept = TRUE},
 #'                      the function will evaluates intercept.
 #' @param reduce_set reduce set for reduce SVM, default \code{reduce_set = NULL}.
+#' @param method_ls solver for the internal linear systems: \code{"qr"} (stacked
+#'                  QR decomposition, never forms Gram matrices) or
+#'                  \code{"normal-chol"} (Cholesky on the normal equations).
 #' @return return \code{TSVMClassifier} object.
 #' @export
 closs_tbsvm <- function(X, y, C1 = 1, C2 = C1, C3 = 1e-7, C4 = C3,
@@ -92,8 +107,9 @@ closs_tbsvm <- function(X, y, C1 = 1, C2 = C1, C3 = 1e-7, C4 = C3,
                         gamma = 1 / ncol(X), degree = 3, coef0 = 0,
                         sigma1 = 1, sigma2 = sigma1,
                         eps.hq = 1e-2, hq.steps = 10,
-                        fit_intercept = TRUE, reduce_set = NULL) {
-
+                        fit_intercept = TRUE, reduce_set = NULL,
+                        method_ls = c("qr", "normal-chol")) {
+  method_ls <- match.arg(method_ls)
   X         <- as.matrix(X)
   y         <- as.matrix(y)
   class_set <- sort(unique(y))
@@ -122,7 +138,8 @@ closs_tbsvm <- function(X, y, C1 = 1, C2 = C1, C3 = 1e-7, C4 = C3,
   }
   solver.res <- closs_tbsvm_dual_solver(KernelX, idx, C1, C2, C3, C4,
                                         sigma1, sigma2,
-                                        eps.hq, hq.steps)
+                                        eps.hq, hq.steps,
+                                        method_ls)
 
   model_specs   <- list("X" = X, "y" = y,
                         "C1" = C1, "C2" = C2,

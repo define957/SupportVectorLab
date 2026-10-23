@@ -1,19 +1,26 @@
-ls_tsvm_dual_solver <- function(KernelX, idx, C1, C2) {
+ls_tsvm_dual_solver <- function(KernelX, idx, C1, C2, method_ls) {
 
   H         <- KernelX[idx, , drop = FALSE]
   G         <- KernelX[-idx, , drop = FALSE]
   Hn        <- nrow(H)
   Gn        <- nrow(G)
 
-  HTH       <- crossprod(H)
-  GTG       <- crossprod(G)
-  diag(HTH) <- diag(HTH) + 1e-7
-  diag(GTG) <- diag(GTG) + 1e-7
   e1        <- matrix(1, Hn)
   e2        <- matrix(1, Gn)
-  coef1     <- -cholsolve(GTG + HTH/C1, crossprod(G, e2))
-  coef2     <-  cholsolve(HTH + GTG/C2, crossprod(H, e1))
 
+  if (method_ls == "qr") {
+    coef1 <- -stack_qrsolve(rbind(G, H / sqrt(C1)), crossprod(G, e2), 1e-7)
+    coef2 <-  stack_qrsolve(rbind(H, G / sqrt(C2)), crossprod(H, e1), 1e-7)
+  } else if (method_ls == "normal-chol") {
+    HTH       <- crossprod(H)
+    GTG       <- crossprod(G)
+    A         <- GTG + HTH/C1
+    B         <- HTH + GTG/C2
+    diag(A)   <- diag(A) + 1e-7
+    diag(B)   <- diag(B) + 1e-7
+    coef1     <- -cholsolve(A, crossprod(G, e2))
+    coef2     <-  cholsolve(B, crossprod(H, e1))
+  }
   BaseDualLeastSquaresTSVMClassifier <- list("coef1" = as.matrix(coef1),
                                              "coef2" = as.matrix(coef2))
   return(BaseDualLeastSquaresTSVMClassifier)
@@ -38,13 +45,17 @@ ls_tsvm_dual_solver <- function(KernelX, idx, C1, C2) {
 #' @param fit_intercept if set \code{fit_intercept = TRUE},
 #'                      the function will evaluates intercept.
 #' @param reduce_set reduce set for reduce SVM, default \code{reduce_set = NULL}.
+#' @param method_ls solver for the internal linear systems: \code{"qr"} (stacked
+#'                  QR decomposition, never forms Gram matrices) or
+#'                  \code{"normal-chol"} (Cholesky on the normal equations).
 #' @return return \code{TSVMClassifier} object.
 #' @export
 ls_tsvm <- function(X, y, C1 = 1, C2 = C1,
                     kernel = c("linear", "rbf", "poly"),
                     gamma = 1 / ncol(X), degree = 3, coef0 = 0,
-                    fit_intercept = TRUE, reduce_set = NULL) {
-
+                    fit_intercept = TRUE, reduce_set = NULL,
+                    method_ls = c("qr", "normal-chol")) {
+  method_ls <- match.arg(method_ls)
   X         <- as.matrix(X)
   y         <- as.matrix(y)
   class_set <- sort(unique(y))
@@ -71,7 +82,7 @@ ls_tsvm <- function(X, y, C1 = 1, C2 = C1,
   if (fit_intercept == TRUE) {
     KernelX <- cbind(KernelX, 1)
   }
-  solver.res <- ls_tsvm_dual_solver(KernelX, idx, C1, C2)
+  solver.res <- ls_tsvm_dual_solver(KernelX, idx, C1, C2, method_ls)
 
   model_specs = list("X" = X, "y" = y,
                      "C1" = C1, "C2" = C2,

@@ -1,6 +1,7 @@
 cL2p_ls_tsvm_dual_solver <- function(KernelX, idx, C1, C2,
                                      p, epsilon1, epsilon2,
-                                     eps.irls, irls.steps, irls.reg) {
+                                     eps.irls, irls.steps, irls.reg,
+                                     method_ls) {
 
   update_weight <- function(X, w, p, epsilon, irls.reg) {
     f <- X %*% w
@@ -27,15 +28,21 @@ cL2p_ls_tsvm_dual_solver <- function(KernelX, idx, C1, C2,
   coef1 <- matrix(0, xp)
   coef2 <- matrix(0, xp)
 
-  HTH   <- crossprod(H)
-  GTG   <- crossprod(G)
+  if (method_ls == "normal-chol") {
+    HTH   <- crossprod(H)
+    GTG   <- crossprod(G)
+  }
   HT_e1 <- crossprod(H, e1)
   GT_e2 <- crossprod(G, e2)
 
   for (i in 1:irls.steps) {
-    A         <- crossprod(H*(Fvec/C1), H) + GTG
-    diag(A)   <- diag(A) + 1e-7
-    coef1_new <- -cholsolve(A, GT_e2)
+    if (method_ls == "qr") {
+      coef1_new <- -stack_qrsolve(rbind(sqrt(Fvec/C1) * H, G), GT_e2, 1e-7)
+    } else if (method_ls == "normal-chol") {
+      A         <- crossprod(H*(Fvec/C1), H) + GTG
+      diag(A)   <- diag(A) + 1e-7
+      coef1_new <- -cholsolve(A, GT_e2)
+    }
     if (norm(coef1_new - coef1, type = "2") < eps.irls) {
       coef1 <- coef1_new
       break
@@ -45,9 +52,13 @@ cL2p_ls_tsvm_dual_solver <- function(KernelX, idx, C1, C2,
   }
 
   for (i in 1:irls.steps) {
-    B         <- crossprod(G*(Dvec/C2), G) + HTH
-    diag(B)   <- diag(B) + 1e-7
-    coef2_new <- cholsolve(B, HT_e1)
+    if (method_ls == "qr") {
+      coef2_new <- stack_qrsolve(rbind(sqrt(Dvec / C2) * G, H), HT_e1, 1e-7)
+    } else if (method_ls == "normal-chol") {
+      B         <- crossprod(G*(Dvec/C2), G) + HTH
+      diag(B)   <- diag(B) + 1e-7
+      coef2_new <- cholsolve(B, HT_e1)
+    }
     if (norm(coef2_new - coef2, type = "2") < eps.irls) {
       coef2 <- coef2_new
       break
@@ -85,6 +96,9 @@ cL2p_ls_tsvm_dual_solver <- function(KernelX, idx, C1, C2,
 #'                      the function will evaluates intercept.
 #' @param irls.reg \code{irls.reg} is used to avoid division-by-zero issues when updating weights.
 #' @param reduce_set reduce set for reduce SVM, default \code{reduce_set = NULL}.
+#' @param method_ls solver for the internal linear systems: \code{"qr"} (stacked
+#'                  QR decomposition, never forms Gram matrices) or
+#'                  \code{"normal-chol"} (Cholesky on the normal equations).
 #' @return return \code{TSVMClassifier} object.
 #' @export
 cL2p_ls_tsvm <- function(X, y, C1 = 1, C2 = C1,
@@ -92,8 +106,9 @@ cL2p_ls_tsvm <- function(X, y, C1 = 1, C2 = C1,
                          gamma = 1 / ncol(X), degree = 3, coef0 = 0,
                          p = 1, epsilon1 = 1, epsilon2 = epsilon1,
                          eps.irls = 1e-2, irls.steps = 10, irls.reg = 1e-4,
-                         fit_intercept = TRUE, reduce_set = NULL) {
-
+                         fit_intercept = TRUE, reduce_set = NULL,
+                         method_ls = c("qr", "normal-chol")) {
+  method_ls <- match.arg(method_ls)
   X         <- as.matrix(X)
   y         <- as.matrix(y)
   class_set <- sort(unique(y))
@@ -122,7 +137,8 @@ cL2p_ls_tsvm <- function(X, y, C1 = 1, C2 = C1,
   }
   solver.res <- cL2p_ls_tsvm_dual_solver(KernelX, idx, C1, C2,
                                          p, epsilon1, epsilon2,
-                                         eps.irls, irls.steps, irls.reg)
+                                         eps.irls, irls.steps, irls.reg,
+                                         method_ls)
   model_specs = list("X" = X, "y" = y,
                      "C1" = C1, "C2" = C2,
                      "fit_intercept" = fit_intercept,

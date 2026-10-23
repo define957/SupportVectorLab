@@ -20,7 +20,8 @@ closs_tbsvm(
   eps.hq = 0.01,
   hq.steps = 10,
   fit_intercept = TRUE,
-  reduce_set = NULL
+  reduce_set = NULL,
+  method_ls = c("qr", "normal-chol")
 )
 }
 \arguments{
@@ -51,6 +52,10 @@ closs_tbsvm(
 the function will evaluates intercept.}
 
 \item{reduce_set}{reduce set for reduce SVM, default \code{reduce_set = NULL}.}
+
+\item{method_ls}{solver for the internal linear systems: \code{"qr"} (stacked
+QR decomposition, never forms Gram matrices) or
+\code{"normal-chol"} (Cholesky on the normal equations).}
 }
 \value{
 return \code{TSVMClassifier} object.

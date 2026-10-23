@@ -4,7 +4,8 @@ hinge_tsvm_dual_solver <- function(
     C1,
     C2,
     eps,
-    max.steps
+    max.steps,
+    method_ls
   ) {
 
   H  <- KernelX[idx, , drop = FALSE]
@@ -12,9 +13,13 @@ hinge_tsvm_dual_solver <- function(
   Hn <- nrow(H)
   Gn <- nrow(G)
 
-  HTH        <- crossprod(H)
-  diag(HTH)  <- diag(HTH) + 1e-7
-  invHTH_GT  <- cholsolve(HTH, t(G))
+  if (method_ls == "qr") {
+    invHTH_GT <- stack_qrsolve(H, t(G), 1e-7)
+  } else if (method_ls == "normal-chol") {
+    HTH        <- crossprod(H)
+    diag(HTH)  <- diag(HTH) + 1e-7
+    invHTH_GT  <- cholsolve(HTH, t(G))
+  }
   dualH1     <- G %*% invHTH_GT
   dualq1     <- matrix(1, Gn)
   duallb1    <- matrix(0, Gn)
@@ -24,9 +29,13 @@ hinge_tsvm_dual_solver <- function(
                                    eps, max.steps, u01)$x
   coef1      <- -invHTH_GT %*% dual_coef1
 
-  GTG        <- crossprod(G)
-  diag(GTG)  <- diag(GTG) + 1e-7
-  invGTG_HT  <- cholsolve(GTG, t(H))
+  if (method_ls == "qr") {
+    invGTG_HT <- stack_qrsolve(G, t(H), 1e-7)
+  } else if (method_ls == "normal-chol") {
+    GTG        <- crossprod(G)
+    diag(GTG)  <- diag(GTG) + 1e-7
+    invGTG_HT  <- cholsolve(GTG, t(H))
+  }
   dualH2     <- H %*% invGTG_HT
   dualq2     <- matrix(1, Hn)
   duallb2    <- matrix(0, Hn)
@@ -62,14 +71,18 @@ hinge_tsvm_dual_solver <- function(
 #' @param fit_intercept if set \code{fit_intercept = TRUE},
 #'                      the function will evaluates intercept.
 #' @param reduce_set reduce set for reduce SVM, default \code{reduce_set = NULL}.
+#' @param method_ls solver for the internal linear systems: \code{"qr"} (stacked
+#'                  QR decomposition, never forms Gram matrices) or
+#'                  \code{"normal-chol"} (Cholesky on the normal equations).
 #' @return return \code{TSVMClassifier} object.
 #' @export
 hinge_tsvm <- function(X, y, C1 = 1, C2 = C1,
                        kernel = c("linear", "rbf", "poly"),
                        gamma = 1 / ncol(X), degree = 3, coef0 = 0,
                        eps = 1e-5, max.steps = 4000,
-                       fit_intercept = TRUE, reduce_set = NULL) {
-
+                       fit_intercept = TRUE, reduce_set = NULL,
+                       method_ls = c("qr", "normal-chol")) {
+  method_ls <- match.arg(method_ls)
   X         <- as.matrix(X)
   y         <- as.matrix(y)
   class_set <- sort(unique(y))
@@ -96,7 +109,7 @@ hinge_tsvm <- function(X, y, C1 = 1, C2 = C1,
   if (fit_intercept == TRUE) {
     KernelX <- cbind(KernelX, 1)
   }
-  solver.res <- hinge_tsvm_dual_solver(KernelX, idx, C1, C2, eps, max.steps)
+  solver.res <- hinge_tsvm_dual_solver(KernelX, idx, C1, C2, eps, max.steps, method_ls)
 
   model_specs   <- list("X" = X, "y" = y,
                         "C1" = C1, "C2" = C2,
