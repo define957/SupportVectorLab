@@ -1,15 +1,23 @@
 hinge_eps_tsvr_dual_solver <- function(KernelX, y, C1, C2, C3, C4, epsilon1, epsilon2,
-                                       eps, max.steps) {
+                                       eps, max.steps, method_ls) {
   xn <- nrow(KernelX)
   xp <- ncol(KernelX)
 
-  G             <- KernelX
-  GramG         <- crossprod(G)
-  GTG_C3_inv_GT <- cholsolve(GramG + diag(C3, xp), t(G))
-  dualH1        <- G %*% GTG_C3_inv_GT
+  G <- KernelX
+  if (method_ls == "qr") {
+    GTG_C3_inv_GT <- stack_qrsolve(G, t(G), C3)
+  } else if (method_ls == "normal-chol") {
+    GramG         <- crossprod(G)
+    GTG_C3_inv_GT <- cholsolve(GramG + diag(C3, xp), t(G))
+  }
+  dualH1 <- G %*% GTG_C3_inv_GT
 
   if (C3 != C4) {
-    GTG_C4_inv_GT <- cholsolve(GramG + diag(C4, xp), t(G))
+    if (method_ls == "qr") {
+      GTG_C4_inv_GT <- stack_qrsolve(G, t(G), C4)
+    } else if (method_ls == "normal-chol") {
+      GTG_C4_inv_GT <- cholsolve(GramG + diag(C4, xp), t(G))
+    }
     dualH2        <- G %*% GTG_C4_inv_GT
   } else {
     GTG_C4_inv_GT <- GTG_C3_inv_GT
@@ -57,6 +65,9 @@ hinge_eps_tsvr_dual_solver <- function(KernelX, y, C1, C2, C3, C4, epsilon1, eps
 #' @param fit_intercept if set \code{fit_intercept = TRUE},
 #'                      the function will evaluates intercept.
 #' @param reduce_set reduce set for reduce SVM, default \code{reduce_set = NULL}.
+#' @param method_ls solver for the internal linear systems: \code{"qr"} (stacked
+#'                  QR decomposition, never forms Gram matrices) or
+#'                  \code{"normal-chol"} (Cholesky on the normal equations).
 #' @return return \code{EPSTSVMRegressor} object.
 #' @export
 hinge_eps_tsvr <- function(X, y, C1 = 1, C2 = C1, C3 = 1e-7, C4 = C3,
@@ -64,8 +75,9 @@ hinge_eps_tsvr <- function(X, y, C1 = 1, C2 = C1, C3 = 1e-7, C4 = C3,
                        kernel = c("linear", "rbf", "poly"),
                        gamma = 1 / ncol(X), degree = 3, coef0 = 0,
                        eps = 1e-7, max.steps = 4000, fit_intercept = TRUE,
-                       reduce_set = NULL) {
-
+                       reduce_set = NULL,
+                       method_ls = c("qr", "normal-chol")) {
+  method_ls <- match.arg(method_ls)
   X <- as.matrix(X)
   y <- as.matrix(y)
 
@@ -85,7 +97,7 @@ hinge_eps_tsvr <- function(X, y, C1 = 1, C2 = C1, C3 = 1e-7, C4 = C3,
     KernelX <- cbind(KernelX, 1)
   }
   solver.res <- hinge_eps_tsvr_dual_solver(KernelX, y, C1, C2, C3, C4, epsilon1, epsilon2,
-                                           eps, max.steps)
+                                           eps, max.steps, method_ls)
 
   model_specs   <- list("X" = X, "y" = y,
                         "C1" = C1, "C2" = C2,

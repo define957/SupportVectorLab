@@ -1,9 +1,13 @@
 hinge_wtsvr_dual_solver <- function(KernelX, y, D1, D2, C1, C2, epsilon1, epsilon2,
-                                    eps, max.steps) {
+                                    eps, max.steps, method_ls) {
   xn <- nrow(KernelX)
   xp <- ncol(KernelX)
   G <- KernelX
-  GTD1G_inv_GT <- cholsolve(t(G) %*% (D1*G) + diag(1e-7, xp), t(G))
+  if (method_ls == "qr") {
+    GTD1G_inv_GT <- stack_qrsolve(sqrt(D1)*G, t(G), 1e-7)
+  } else if (method_ls == "normal-chol") {
+    GTD1G_inv_GT <- cholsolve(t(G) %*% (D1*G) + diag(1e-7, xp), t(G))
+  }
   dualH <- G %*% GTD1G_inv_GT
 
   f <- as.matrix(y - epsilon1)
@@ -53,6 +57,9 @@ hinge_wtsvr_dual_solver <- function(KernelX, y, D1, D2, C1, C2, epsilon1, epsilo
 #' @param fit_intercept if set \code{fit_intercept = TRUE},
 #'                      the function will evaluates intercept.
 #' @param reduce_set reduce set for reduce SVM, default \code{reduce_set = NULL}.
+#' @param method_ls solver for the internal linear systems: \code{"qr"} (stacked
+#'                  QR decomposition, never forms Gram matrices) or
+#'                  \code{"normal-chol"} (Cholesky on the normal equations).
 #' @param weight_f1,weight_f2 optional functions to compute sample weights for the
 #'   least squares loss and hinge loss, respectively. Default is NULL, meaning the
 #'   corresponding \code{D1} or \code{D2} vector is used directly. When a function is
@@ -72,9 +79,10 @@ hinge_wtsvr <- function(X, y, C1 = 1, C2 = C1,
                         gamma = 1 / ncol(X), degree = 3, coef0 = 0,
                         eps = 1e-7, max.steps = 4000, fit_intercept = TRUE,
                         reduce_set = NULL,
+                        method_ls = c("qr", "normal-chol"),
                         weight_f1 = NULL, weight_f2 = NULL,
                         weight_option1 = NULL, weight_option2 = NULL) {
-
+  method_ls <- match.arg(method_ls)
   X <- as.matrix(X)
   y <- as.matrix(y)
 
@@ -100,7 +108,7 @@ hinge_wtsvr <- function(X, y, C1 = 1, C2 = C1,
     D2 <- do.call(weight_f2, append(list("X" = X, "y" = y), weight_option2))
   }
   solver.res <- hinge_wtsvr_dual_solver(KernelX, y, D1, D2, C1, C2, epsilon1, epsilon2,
-                                        eps, max.steps)
+                                        eps, max.steps, method_ls)
   model_specs   <- list("X" = X, "y" = y,
                         "C1" = C1, "C2" = C2,
                         "epsilon1" = epsilon1, "epsilon2" = epsilon2,

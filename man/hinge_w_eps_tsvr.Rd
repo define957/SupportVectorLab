@@ -23,6 +23,7 @@ hinge_w_eps_tsvr(
   max.steps = 4000,
   fit_intercept = TRUE,
   reduce_set = NULL,
+  method_ls = c("qr", "normal-chol"),
   weight_f1 = NULL,
   weight_f2 = NULL,
   weight_option1 = NULL,
@@ -61,6 +62,10 @@ hinge_w_eps_tsvr(
 the function will evaluates intercept.}
 
 \item{reduce_set}{reduce set for reduce SVM, default \code{reduce_set = NULL}.}
+
+\item{method_ls}{solver for the internal linear systems: \code{"qr"} (stacked
+QR decomposition, never forms Gram matrices) or
+\code{"normal-chol"} (Cholesky on the normal equations).}
 
 \item{weight_f1, weight_f2}{optional functions to compute sample weights for the
 least squares loss and hinge loss, respectively. Default is NULL, meaning the

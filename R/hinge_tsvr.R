@@ -1,9 +1,13 @@
 hinge_tsvr_dual_solver <- function(KernelX, y, C1, C2, epsilon1, epsilon2,
-                                   eps, max.steps) {
+                                   eps, max.steps, method_ls) {
   xn <- nrow(KernelX)
   xp <- ncol(KernelX)
   G <- KernelX
-  GTG_inv_G <- cholsolve(crossprod(G) + diag(1e-7, xp), t(G))
+  if (method_ls == "qr") {
+    GTG_inv_G <- stack_qrsolve(G, t(G), 1e-7)
+  } else if (method_ls == "normal-chol") {
+    GTG_inv_G <- cholsolve(crossprod(G) + diag(1e-7, xp), t(G))
+  }
   dualH <- G %*% GTG_inv_G
 
   f <- as.matrix(y - epsilon1)
@@ -52,6 +56,9 @@ hinge_tsvr_dual_solver <- function(KernelX, y, C1, C2, epsilon1, epsilon2,
 #' @param fit_intercept if set \code{fit_intercept = TRUE},
 #'                      the function will evaluates intercept.
 #' @param reduce_set reduce set for reduce SVM, default \code{reduce_set = NULL}.
+#' @param method_ls solver for the internal linear systems: \code{"qr"} (stacked
+#'                  QR decomposition, never forms Gram matrices) or
+#'                  \code{"normal-chol"} (Cholesky on the normal equations).
 #' @return return \code{TSVMRegressor} object.
 #' @export
 hinge_tsvr <- function(X, y, C1 = 1, C2 = C1,
@@ -59,8 +66,9 @@ hinge_tsvr <- function(X, y, C1 = 1, C2 = C1,
                        kernel = c("linear", "rbf", "poly"),
                        gamma = 1 / ncol(X), degree = 3, coef0 = 0,
                        eps = 1e-7, max.steps = 4000, fit_intercept = TRUE,
-                       reduce_set = NULL) {
-
+                       reduce_set = NULL,
+                       method_ls = c("qr", "normal-chol")) {
+  method_ls <- match.arg(method_ls)
   X <- as.matrix(X)
   y <- as.matrix(y)
 
@@ -80,7 +88,7 @@ hinge_tsvr <- function(X, y, C1 = 1, C2 = C1,
     KernelX <- cbind(KernelX, 1)
   }
   solver.res <- hinge_tsvr_dual_solver(KernelX, y, C1, C2, epsilon1, epsilon2,
-                                       eps, max.steps)
+                                       eps, max.steps, method_ls)
   model_specs   <- list("X" = X, "y" = y,
                         "C1" = C1, "C2" = C2,
                         "epsilon1" = epsilon1, "epsilon2" = epsilon2,

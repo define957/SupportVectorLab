@@ -64,9 +64,12 @@ LLtsolve <- function(Lt, b) {
   return(x)
 }
 
-stack_qrsolve <- function(blocks, rhs, ridge_stack) {
+stack_qrsolve <- function(blocks, rhs, ridge_stack = 0) {
   p     <- ncol(blocks)
-  S     <- rbind(blocks, diag(sqrt(ridge_stack), p))
+  S     <- blocks
+  if (ridge_stack > 0) {
+    S <- rbind(S, diag(sqrt(ridge_stack), p))
+  }
   QRS   <- qr(S, LAPACK = TRUE)
   if (QRS$rank < p) {
     stop("stack_qrsolve: blocks are rank-deficient!")
@@ -76,4 +79,18 @@ stack_qrsolve <- function(blocks, rhs, ridge_stack) {
   x          <- matrix(0, p, ncol(rhs))
   x[pivot, ] <- LLtsolve(R, rhs[pivot, , drop = FALSE])
   x
+}
+
+## Factor the constant block [x; sqrt(ridge_stack) * I_p] once, so the IRLS
+## loops can stack it as rbind(changing_rows, R) instead of
+## rbind(changing_rows, x, sqrt(ridge_stack) * I_p).
+##
+## The QR is column-pivoted: R'R = P'(x'x + ridge I)P, so callers un-pivot it
+## with  R_u <- R[, order(pivot)]  (R_u'R_u = x'x + ridge I, dense p x p) and
+## stack R_u with the un-permuted data rows (no rhs / solution permutation).
+## R_u is dense: only use it to build the stacked matrix, never in LLtsolve().
+qr_aug <- function(x, ridge_stack) {
+  p  <- ncol(x)
+  qS <- qr(rbind(x, diag(sqrt(ridge_stack), p)), LAPACK = TRUE)
+  list(R = qr.R(qS), pivot = qS$pivot)
 }
