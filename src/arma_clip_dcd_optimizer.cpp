@@ -32,10 +32,14 @@ Rcpp::List cpp_clip_dcd_optimizer(const arma::mat& H, const arma::vec& q,
       if(std::fabs(nu) < 1e-12) {
         continue;
       }
-      if((lb_i < 0 && nu < 0) ||
-         (ub_i > 0 && nu > 0)) {
-        feasible_indices(count++) = i;
-      }
+      // if((lb_i < 0 && nu < 0) ||
+      //    (ub_i > 0 && nu > 0)) {
+      //   feasible_indices(count++) = i;
+      // }
+      bool ok = ((lb_i < 0) & (nu < 0)) |
+        ((ub_i > 0) & (nu > 0));
+      feasible_indices(count) = i;
+      count += (unsigned int)ok;
     }
 
     if(count == 0){break;}
