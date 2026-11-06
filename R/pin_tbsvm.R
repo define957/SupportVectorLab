@@ -1,0 +1,160 @@
+pin_tbsvm_dual_solver <- function(KernelX, idx, C1, C2, C3, C4,
+                                 tau1, tau2, eps, max.steps,
+                                 method_ls) {
+
+  H  <- KernelX[idx, , drop = FALSE]
+  G  <- KernelX[-idx, , drop = FALSE]
+  Hn <- nrow(H)
+  Gn <- nrow(G)
+
+  if (method_ls == "qr") {
+    invHTH_GT <- stack_qrsolve(H, t(G), C3)
+  } else if (method_ls == "normal-chol") {
+    HTH        <- crossprod(H)
+    diag(HTH)  <- diag(HTH) + C3
+    invHTH_GT  <- cholsolve(HTH, t(G))
+  }
+  dualH1     <- G %*% invHTH_GT
+  dualq1     <- matrix(1, Gn)
+  duallb1    <- matrix(-tau1*C1, Gn)
+  dualub1    <- matrix(C1, Gn)
+  if (tau1 == 0) {
+    u01        <- matrix(0, Gn)
+  } else {
+    u01        <- (duallb1 + dualub1) / 2
+  }
+  res1       <- clip_dcd_optimizer(dualH1, dualq1, duallb1, dualub1,
+                                   eps, max.steps, u01)
+  dual_coef1 <- res1$x
+  coef1      <- -invHTH_GT %*% dual_coef1
+
+  if (method_ls == "qr") {
+    invGTG_HT <- stack_qrsolve(G, t(H), C4)
+  } else if (method_ls == "normal-chol") {
+    GTG        <- crossprod(G)
+    diag(GTG)  <- diag(GTG) + C4
+    invGTG_HT  <- cholsolve(GTG, t(H))
+  }
+  dualH2     <- H %*% invGTG_HT
+  dualq2     <- matrix(1, Hn)
+  duallb2    <- matrix(-tau2*C2, Hn)
+  dualub2    <- matrix(C2, Hn)
+  if (tau2 == 0) {
+    u02        <- matrix(0, Hn)
+  } else {
+    u02        <- (duallb2 + dualub2) / 2
+  }
+  res2       <- clip_dcd_optimizer(dualH2, dualq2, duallb2, dualub2,
+                                   eps, max.steps, u02)
+  dual_coef2 <- res2$x
+  coef2      <- invGTG_HT %*% dual_coef2
+
+  PinTBSVMDualSolver <- list("coef1" = as.matrix(coef1),
+                             "coef2" = as.matrix(coef2))
+  return(PinTBSVMDualSolver)
+}
+
+#' Pinball Twin Bounded Support Vector Machine
+#'
+#' \code{pin_tbsvm} is an R implementation of the twin bounded support
+#' vector machine with pinball loss (Pin-TBSVM), based on the model proposed
+#' by Li and Lv (2021). Each nonparallel hyperplane is obtained by solving a
+#' box-constrained quadratic program in the dual space, where the pinball loss
+#' replaces the hinge loss to improve noise insensitivity and resampling
+#' stability. The dual problems are solved with the clipped dual coordinate
+#' descent method.
+#'
+#' @author Zhang Jiaqi.
+#' @param X,y dataset and label.
+#' @param C1,C2 penalty parameter for the pinball loss term of each
+#'             hyperplane.
+#' @param C3,C4 weight of the regularization term \eqn{\frac{1}{2}(\|w\|^2 + b^2)}
+#'             for each hyperplane. Small positive values (default
+#'             \code{1e-7}) also stabilize the internal linear system solves.
+#' @param tau1,tau2 parameter of the pinball loss function for each hyperplane,
+#'             should be in \code{[0, 1]}.
+#'             \code{tau1} is used for the first hyperplane and \code{tau2} for
+#'             the second; \code{tau = 0} reduces to the hinge loss.
+#' @param kernel kernel function. The definitions of various kernel functions are as follows:
+#' \describe{
+#'     \item{linear:}{\eqn{u'v}{u'*v}}
+#'     \item{poly:}{\eqn{(\gamma u'v + coef0)^{degree}}{(gamma*u'*v + coef0)^degree}}
+#'     \item{rbf:}{\eqn{e^{(-\gamma |u-v|^2)}}{exp(-gamma*|u-v|^2)}}
+#' }
+#' @param gamma parameter for \code{'rbf'} and \code{'poly'} kernel. Default \code{gamma = 1/ncol(X)}.
+#' @param degree parameter for polynomial kernel, default: \code{degree = 3}.
+#' @param coef0 parameter for polynomial kernel,  default: \code{coef0 = 0}.
+#' @param eps the precision of the optimization algorithm.
+#' @param max.steps the number of iterations to solve the optimization problem.
+#' @param fit_intercept if set \code{fit_intercept = TRUE},
+#'                      the function will evaluates intercept.
+#' @param reduce_set reduce set for reduce SVM, default \code{reduce_set = NULL}.
+#' @param method_ls solver for the internal linear systems: \code{"qr"} (stacked
+#'                  QR decomposition, never forms Gram matrices) or
+#'                  \code{"normal-chol"} (Cholesky on the normal equations).
+#' @return return \code{TSVMClassifier} object.
+#' @references
+#' Li, K., & Lv, Z. (2021). Smooth twin bounded support vector machine with
+#' pinball loss. \emph{Applied Intelligence}, 51(8), 5489–5505.
+#' \doi{10.1007/s10489-020-02085-5}
+#' @export
+pin_tbsvm <- function(X, y, C1 = 1, C2 = C1, C3 = 1e-7, C4 = C3,
+                     kernel = c("linear", "rbf", "poly"),
+                     tau1 = 0.5, tau2 = tau1,
+                     gamma = 1 / ncol(X), degree = 3, coef0 = 0,
+                     eps = 1e-5, max.steps = 4000,
+                     fit_intercept = TRUE, reduce_set = NULL,
+                     method_ls = c("qr", "normal-chol")) {
+  method_ls <- match.arg(method_ls)
+  X         <- as.matrix(X)
+  y         <- as.matrix(y)
+  class_set <- sort(unique(y))
+  idx       <- which(y == class_set[1])
+  y[idx]    <- 1
+  y[-idx]   <- -1
+  y         <- as.matrix(as.numeric(y))
+
+  if (length(class_set) != 2) {
+    stop("This model only supports binary classification; y must have exactly two classes")
+  }
+
+  kernel  <- match.arg(kernel)
+  KernelR <- NULL
+
+  if (kernel != "linear") {
+    kso <- kernel_select_option_(X, kernel, reduce_set, gamma, degree, coef0)
+    KernelX <- kso$KernelX
+    KernelR <- kso$KernelR
+  } else {
+    KernelX <- X
+  }
+  kxp <- ncol(KernelX)
+  if (fit_intercept == TRUE) {
+    KernelX <- cbind(KernelX, 1)
+  }
+  solver.res <- pin_tbsvm_dual_solver(KernelX, idx, C1, C2, C3, C4,
+                                      tau1, tau2, eps, max.steps,
+                                      method_ls)
+
+  model_specs   <- list("X" = X, "y" = y,
+                        "C1" = C1, "C2" = C2,
+                        "fit_intercept" = fit_intercept,
+                        "class_set" = class_set)
+  model_coef    <- list("coef1" = solver.res$coef1,
+                        "coef2" = solver.res$coef2)
+  kernel_config <- list("kernel" = kernel,
+                        "gamma"  = gamma,
+                        "degree" = degree,
+                        "coef0" = coef0,
+                        "reduce_set" = reduce_set,
+                        "KernelR" = KernelR,
+                        "KernelX" = KernelX[, 1:kxp, drop = FALSE])
+  w_norm        <- get_coef_norm(kernel_config, model_coef)
+  kernel_config$w_norm <- w_norm
+
+  TSVMClassifier <- structure(list("model_specs" = model_specs,
+                                   "model_coef" = model_coef,
+                                   "kernel_config" = kernel_config),
+                              "class" = "TSVMClassifier")
+  return(TSVMClassifier)
+}
