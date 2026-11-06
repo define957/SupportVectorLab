@@ -63,6 +63,13 @@ return \code{TSVMClassifier} object.
 \description{
 \code{closs_tbsvm} is an R implementation of CL2,p-LS-TSVM
 }
+\references{
+Xiaohan Zheng, Li Zhang, Leilei Yan (2021).
+            CTSVM: A robust twin support vector machine with correntropy-induced
+            loss function for binary classification problems.
+            \emph{Information Sciences}, 559, 22-45.
+            \doi{10.1016/j.ins.2021.01.006}
+}
 \author{
 Zhang Jiaqi.
 }

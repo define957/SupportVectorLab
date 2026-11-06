@@ -9,8 +9,11 @@ closs_tbsvm_dual_solver <- function(KernelX, idx, C1, C2, C3, C4,
   sigma1sq <- sigma1^2
   sigma2sq <- sigma2^2
 
-  C1_ <- C1/(2*sigma1sq)
-  C2_ <- C2/(2*sigma2sq)
+  beta1 <- -1/expm1(-1/(2*sigma1sq))
+  beta2 <- -1/expm1(-1/(2*sigma2sq))
+
+  C1_ <- C1*beta1/(2*sigma1sq)
+  C2_ <- C2*beta2/(2*sigma2sq)
 
   H  <- KernelX[idx, , drop = FALSE]
   G  <- KernelX[-idx, , drop = FALSE]
@@ -101,6 +104,11 @@ closs_tbsvm_dual_solver <- function(KernelX, idx, C1, C2, C3, C4,
 #'                  QR decomposition, never forms Gram matrices) or
 #'                  \code{"normal-chol"} (Cholesky on the normal equations).
 #' @return return \code{TSVMClassifier} object.
+#' @references Xiaohan Zheng, Li Zhang, Leilei Yan (2021).
+#'             CTSVM: A robust twin support vector machine with correntropy-induced
+#'             loss function for binary classification problems.
+#'             \emph{Information Sciences}, 559, 22-45.
+#'             \doi{10.1016/j.ins.2021.01.006}
 #' @export
 closs_tbsvm <- function(X, y, C1 = 1, C2 = C1, C3 = 1e-7, C4 = C3,
                         kernel = c("linear", "rbf", "poly"),
