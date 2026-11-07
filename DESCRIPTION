@@ -4,6 +4,7 @@ Title: An R Package Containing Many Support Vector Machines
 Version: 0.1.0
 Authors@R: c(person("Jiaqi", "Zhang", role = c("aut", "cre"),
               email = "zhangjiaqi957957@outlook.com"))
+Author: Jiaqi Zhang [aut, cre]
 Maintainer: Zhang Jiaqi <zhangjiaqi957957@outlook.com>
 Description: An R package containing many SVMs with fast C++ dual solver.
 License: file LICENSE

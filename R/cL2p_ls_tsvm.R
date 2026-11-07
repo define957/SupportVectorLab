@@ -3,8 +3,14 @@ cL2p_ls_tsvm_dual_solver <- function(KernelX, idx, C1, C2,
                                      eps.irls, irls.steps, irls.reg,
                                      method_ls) {
 
-  update_weight <- function(X, w, p, epsilon, irls.reg) {
-    f <- X %*% w
+  cl2p_loss_function <- function(z, p, epsilon) {
+    return(sum(pmin(abs(z)^p, epsilon)))
+  }
+  ls_loss_function <- function(z) {
+    return(sum(z^2))
+  }
+
+  update_weight <- function(f, p, epsilon, irls.reg) {
     abs_f <- abs(f)
     abs_f <- pmax(abs_f, irls.reg)
     fL2p <- abs_f^p
@@ -13,14 +19,23 @@ cL2p_ls_tsvm_dual_solver <- function(KernelX, idx, C1, C2,
     return(as.vector(weight_elem))
   }
 
+  compute_objective1 <- function(coef, f, idx, C_between, p, epsilon) {
+    obj <- 0.5*((1e-7) * crossprod(coef) + cl2p_loss_function(f[idx], p, epsilon) +
+           C_between * ls_loss_function(1 + f[-idx]))
+    return(obj)
+  }
+
+  compute_objective2 <- function(coef, f, idx, C_between, p, epsilon) {
+    obj <- 0.5*((1e-7) * crossprod(coef) + cl2p_loss_function(f[-idx], p, epsilon) +
+           C_between * ls_loss_function(1 - f[idx]))
+    return(obj)
+  }
+
   H     <- KernelX[idx, , drop = FALSE]
   G     <- KernelX[-idx, , drop = FALSE]
   Hn    <- nrow(H)
   Gn    <- nrow(G)
   xp    <- ncol(KernelX)
-
-  Fvec  <- rep(1, Hn)
-  Dvec  <- rep(1, Gn)
 
   e1    <- matrix(1, Hn)
   e2    <- matrix(1, Gn)
@@ -35,7 +50,9 @@ cL2p_ls_tsvm_dual_solver <- function(KernelX, idx, C1, C2,
   HT_e1 <- crossprod(H, e1)
   GT_e2 <- crossprod(G, e2)
 
-  for (i in 1:irls.steps) {
+  Fvec      <- rep(1, Hn)
+  obj1      <- NULL
+  for (i in 0:irls.steps) {
     if (method_ls == "qr") {
       coef1_new <- -stack_qrsolve(rbind(sqrt(Fvec/C1) * H, G), GT_e2, 1e-7)
     } else if (method_ls == "normal-chol") {
@@ -43,15 +60,20 @@ cL2p_ls_tsvm_dual_solver <- function(KernelX, idx, C1, C2,
       diag(A)   <- diag(A) + 1e-7
       coef1_new <- -cholsolve(A, GT_e2)
     }
-    if (norm(coef1_new - coef1, type = "2") < eps.irls) {
+    f         <- KernelX %*% coef1_new
+    Fvec      <- update_weight(f[idx], p, epsilon1, irls.reg)
+    obj1_new  <- compute_objective1(coef1_new, f, idx, C1, p, epsilon1)
+    if (!is.null(obj1) && function_tolerance(obj1_new, obj1, eps.irls)) {
       coef1 <- coef1_new
       break
     }
-    Fvec  <- update_weight(H, coef1_new, p, epsilon1, irls.reg)
-    coef1 <- coef1_new
+    coef1     <- coef1_new
+    obj1      <- obj1_new
   }
 
-  for (i in 1:irls.steps) {
+  Dvec      <- rep(1, Gn)
+  obj2      <- NULL
+  for (i in 0:irls.steps) {
     if (method_ls == "qr") {
       coef2_new <- stack_qrsolve(rbind(sqrt(Dvec / C2) * G, H), HT_e1, 1e-7)
     } else if (method_ls == "normal-chol") {
@@ -59,12 +81,15 @@ cL2p_ls_tsvm_dual_solver <- function(KernelX, idx, C1, C2,
       diag(B)   <- diag(B) + 1e-7
       coef2_new <- cholsolve(B, HT_e1)
     }
-    if (norm(coef2_new - coef2, type = "2") < eps.irls) {
+    f         <- KernelX %*% coef2_new
+    Dvec      <- update_weight(f[-idx], p, epsilon2, irls.reg)
+    obj2_new  <- compute_objective2(coef2_new, f, idx, C2, p, epsilon2)
+    if (!is.null(obj2) && function_tolerance(obj2_new, obj2, eps.irls)) {
       coef2 <- coef2_new
       break
     }
-    Dvec  <- update_weight(G, coef2_new, p, epsilon2, irls.reg)
-    coef2 <- coef2_new
+    coef2     <- coef2_new
+    obj2      <- obj2_new
   }
 
   BaseDualCL2PLSTSVMClassifier <- list("coef1" = as.matrix(coef1),
@@ -89,9 +114,14 @@ cL2p_ls_tsvm_dual_solver <- function(KernelX, idx, C1, C2,
 #' @param degree parameter for polynomial kernel, default: \code{degree = 3}.
 #' @param coef0 parameter for polynomial kernel,  default: \code{coef0 = 0}.
 #' @param p parameter for L2,p norm.
-#' @param epsilon1,epsilon2 truncation parameter.
-#' @param eps.irls the precision of the optimization algorithm.
-#' @param irls.steps the number of iterations to solve the optimization problem.
+#' @param epsilon1,epsilon2 truncation parameters for the capped L2,p-norm.
+#' @param eps.irls the tolerance of the stopping criterion: the IRLS
+#'             iterations stop when the relative change of the objective
+#'             function value is below \code{eps.irls}.
+#' @param irls.steps the maximum number of IRLS iterations. The solver first
+#'                  solves the unit-weight least squares system as an
+#'                  initialization, then performs at most \code{irls.steps}
+#'                  reweighted iterations.
 #' @param fit_intercept if set \code{fit_intercept = TRUE},
 #'                      the function will evaluates intercept.
 #' @param irls.reg \code{irls.reg} is used to avoid division-by-zero issues when updating weights.
@@ -100,6 +130,11 @@ cL2p_ls_tsvm_dual_solver <- function(KernelX, idx, C1, C2,
 #'                  QR decomposition, never forms Gram matrices) or
 #'                  \code{"normal-chol"} (Cholesky on the normal equations).
 #' @return return \code{TSVMClassifier} object.
+#' @references Chao Yuan, Liming Yang (2021).
+#'             Capped L2,p-norm metric based robust least squares twin support
+#'             vector machine for pattern classification.
+#'             \emph{Neural Networks}, 142, 457-478.
+#'             \doi{10.1016/j.neunet.2021.06.028}
 #' @export
 cL2p_ls_tsvm <- function(X, y, C1 = 1, C2 = C1,
                          kernel = c("linear", "rbf", "poly"),

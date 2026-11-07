@@ -44,11 +44,16 @@ cL2p_ls_tsvm(
 
 \item{p}{parameter for L2,p norm.}
 
-\item{epsilon1, epsilon2}{truncation parameter.}
+\item{epsilon1, epsilon2}{truncation parameters for the capped L2,p-norm.}
 
-\item{eps.irls}{the precision of the optimization algorithm.}
+\item{eps.irls}{the tolerance of the stopping criterion: the IRLS
+iterations stop when the relative change of the objective
+function value is below \code{eps.irls}.}
 
-\item{irls.steps}{the number of iterations to solve the optimization problem.}
+\item{irls.steps}{the maximum number of IRLS iterations. The solver first
+solves the unit-weight least squares system as an
+initialization, then performs at most \code{irls.steps}
+reweighted iterations.}
 
 \item{irls.reg}{\code{irls.reg} is used to avoid division-by-zero issues when updating weights.}
 
@@ -66,6 +71,13 @@ return \code{TSVMClassifier} object.
 }
 \description{
 \code{cL2p_ls_tsvm} is an R implementation of CL2,p-LS-TSVM
+}
+\references{
+Chao Yuan, Liming Yang (2021).
+            Capped L2,p-norm metric based robust least squares twin support
+            vector machine for pattern classification.
+            \emph{Neural Networks}, 142, 457-478.
+            \doi{10.1016/j.neunet.2021.06.028}
 }
 \author{
 Zhang Jiaqi.

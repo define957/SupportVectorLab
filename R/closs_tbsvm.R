@@ -1,9 +1,27 @@
 closs_tbsvm_dual_solver <- function(KernelX, idx, C1, C2, C3, C4,
                                     sigma1, sigma2,
                                     eps.hq, hq.steps, method_ls) {
+  c_loss_function <- function(z, sigmasq, beta) {
+    return(sum(-beta*expm1(-z^2 / (2*sigmasq))))
+  }
+  ls_loss_function <- function(z) {
+    return(sum(z^2))
+  }
 
   update_omega <- function(f, sigma_sq) {
     return(as.vector(exp(-f^2/(2*sigma_sq))))
+  }
+
+  compute_objective1 <- function(coef, f, idx, C_reg, C_between, sigmasq, beta) {
+    obj <- 0.5*(C_reg * crossprod(coef) + ls_loss_function(f[idx]) +
+      C_between * c_loss_function(1 + f[-idx], sigmasq, beta))
+    return(obj)
+  }
+
+  compute_objective2 <- function(coef, f, idx, C_reg, C_between, sigmasq, beta) {
+    obj <- 0.5*(C_reg * crossprod(coef) + ls_loss_function(f[-idx]) +
+      C_between * c_loss_function(1 - f[idx], sigmasq, beta))
+    return(obj)
   }
 
   sigma1sq <- sigma1^2
@@ -21,9 +39,6 @@ closs_tbsvm_dual_solver <- function(KernelX, idx, C1, C2, C3, C4,
   Gn <- nrow(G)
   xp    <- ncol(KernelX)
 
-  Omegavec1 <- rep(1, Gn)
-  Omegavec2 <- rep(1, Hn)
-
   e1 <- matrix(1, Hn)
   e2 <- matrix(1, Gn)
 
@@ -35,7 +50,9 @@ closs_tbsvm_dual_solver <- function(KernelX, idx, C1, C2, C3, C4,
     GTG <- crossprod(G)
   }
 
-  for (i in 1:hq.steps) {
+  Omegavec1 <- rep(1, Gn)
+  obj1      <- NULL
+  for (i in 0:hq.steps) {
     G_omega_lam   <- G*(Omegavec1*C1_)
     if (method_ls == "qr") {
       coef1_new     <- -stack_qrsolve(rbind(H, sqrt(Omegavec1*C1_) * G),
@@ -45,16 +62,20 @@ closs_tbsvm_dual_solver <- function(KernelX, idx, C1, C2, C3, C4,
       diag(A)       <- diag(A) + C3
       coef1_new     <- -cholsolve(A, crossprod(G_omega_lam, e2))
     }
-    if (norm(coef1_new - coef1, type = "2") < eps.hq) {
+    f         <- KernelX %*% coef1_new
+    Omegavec1 <- update_omega(1 + f[-idx], sigma1sq)
+    obj1_new  <- compute_objective1(coef1_new, f, idx, C3, C1, sigma1sq, beta1)
+    if (!is.null(obj1) && function_tolerance(obj1_new, obj1, eps.hq)) {
       coef1 <- coef1_new
       break
     }
-    f1        <-  G %*% coef1_new
-    Omegavec1 <-  update_omega(1 + f1, sigma1sq)
     coef1     <- coef1_new
+    obj1      <- obj1_new
   }
 
-  for (i in 1:hq.steps) {
+  Omegavec2 <- rep(1, Hn)
+  obj2      <- NULL
+  for (i in 0:hq.steps) {
     H_omega_lam   <- H*(Omegavec2*C2_)
     if (method_ls == "qr") {
       coef2_new     <- stack_qrsolve(rbind(G, sqrt(Omegavec2*C2_) * H),
@@ -64,13 +85,15 @@ closs_tbsvm_dual_solver <- function(KernelX, idx, C1, C2, C3, C4,
       diag(B)       <- diag(B) + C4
       coef2_new     <- cholsolve(B, crossprod(H_omega_lam, e1))
     }
-    if (norm(coef2_new - coef2, type = "2") < eps.hq) {
+    f         <- KernelX %*% coef2_new
+    Omegavec2 <- update_omega(1 - f[idx], sigma2sq)
+    obj2_new  <- compute_objective2(coef2_new, f, idx, C4, C2, sigma2sq, beta2)
+    if (!is.null(obj2) && function_tolerance(obj2_new, obj2, eps.hq)) {
       coef2 <- coef2_new
       break
     }
-    f2        <- H %*% coef2_new
-    Omegavec2 <- update_omega(1 - f2, sigma2sq)
     coef2     <- coef2_new
+    obj2      <- obj2_new
   }
 
   BaseDualClossTBSVMClassifier <- list("coef1" = as.matrix(coef1),
@@ -80,7 +103,7 @@ closs_tbsvm_dual_solver <- function(KernelX, idx, C1, C2, C3, C4,
 
 #' C-loss Least Squares Twin Bounded Support Vector Machine
 #'
-#' \code{closs_tbsvm} is an R implementation of CL2,p-LS-TSVM
+#' \code{closs_tbsvm} is an R implementation of CTSVM
 #'
 #' @author Zhang Jiaqi.
 #' @param X,y dataset and label.
@@ -95,8 +118,13 @@ closs_tbsvm_dual_solver <- function(KernelX, idx, C1, C2, C3, C4,
 #' @param degree parameter for polynomial kernel, default: \code{degree = 3}.
 #' @param coef0 parameter for polynomial kernel,  default: \code{coef0 = 0}.
 #' @param sigma1,sigma2 parameters for C-loss function.
-#' @param eps.hq the precision of the optimization algorithm.
-#' @param hq.steps the number of iterations to solve the optimization problem.
+#' @param eps.hq the tolerance of the stopping criterion: the half-quadratic
+#'             iterations stop when the relative change of the objective
+#'             function value is below \code{eps.hq}.
+#' @param hq.steps the maximum number of half-quadratic iterations. The solver
+#'             first solves the unit-weight least squares system as an
+#'             initialization, then performs at most \code{hq.steps}
+#'             reweighted iterations.
 #' @param fit_intercept if set \code{fit_intercept = TRUE},
 #'                      the function will evaluates intercept.
 #' @param reduce_set reduce set for reduce SVM, default \code{reduce_set = NULL}.

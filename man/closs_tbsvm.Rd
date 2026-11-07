@@ -44,9 +44,14 @@ closs_tbsvm(
 
 \item{sigma1, sigma2}{parameters for C-loss function.}
 
-\item{eps.hq}{the precision of the optimization algorithm.}
+\item{eps.hq}{the tolerance of the stopping criterion: the half-quadratic
+iterations stop when the relative change of the objective
+function value is below \code{eps.hq}.}
 
-\item{hq.steps}{the number of iterations to solve the optimization problem.}
+\item{hq.steps}{the maximum number of half-quadratic iterations. The solver
+first solves the unit-weight least squares system as an
+initialization, then performs at most \code{hq.steps}
+reweighted iterations.}
 
 \item{fit_intercept}{if set \code{fit_intercept = TRUE},
 the function will evaluates intercept.}
@@ -61,7 +66,7 @@ QR decomposition, never forms Gram matrices) or
 return \code{TSVMClassifier} object.
 }
 \description{
-\code{closs_tbsvm} is an R implementation of CL2,p-LS-TSVM
+\code{closs_tbsvm} is an R implementation of CTSVM
 }
 \references{
 Xiaohan Zheng, Li Zhang, Leilei Yan (2021).
