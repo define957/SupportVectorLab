@@ -14,10 +14,10 @@ hinge_tsvm_dual_solver <- function(
   Gn <- nrow(G)
 
   if (method_ls == "qr") {
-    invHTH_GT <- stack_qrsolve(H, t(G), 1e-7)
+    invHTH_GT <- stack_qrsolve(H, t(G), 1e-5)
   } else if (method_ls == "normal-chol") {
     HTH        <- crossprod(H)
-    diag(HTH)  <- diag(HTH) + 1e-7
+    diag(HTH)  <- diag(HTH) + 1e-5
     invHTH_GT  <- cholsolve(HTH, t(G))
   }
   dualH1     <- G %*% invHTH_GT
@@ -30,10 +30,10 @@ hinge_tsvm_dual_solver <- function(
   coef1      <- -invHTH_GT %*% dual_coef1
 
   if (method_ls == "qr") {
-    invGTG_HT <- stack_qrsolve(G, t(H), 1e-7)
+    invGTG_HT <- stack_qrsolve(G, t(H), 1e-5)
   } else if (method_ls == "normal-chol") {
     GTG        <- crossprod(G)
-    diag(GTG)  <- diag(GTG) + 1e-7
+    diag(GTG)  <- diag(GTG) + 1e-5
     invGTG_HT  <- cholsolve(GTG, t(H))
   }
   dualH2     <- H %*% invGTG_HT

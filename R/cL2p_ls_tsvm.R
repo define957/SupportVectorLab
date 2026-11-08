@@ -20,13 +20,13 @@ cL2p_ls_tsvm_dual_solver <- function(KernelX, idx, C1, C2,
   }
 
   compute_objective1 <- function(coef, f, idx, C_between, p, epsilon) {
-    obj <- 0.5*((1e-7) * crossprod(coef) + cl2p_loss_function(f[idx], p, epsilon) +
+    obj <- 0.5*((1e-5) * crossprod(coef) + cl2p_loss_function(f[idx], p, epsilon) +
            C_between * ls_loss_function(1 + f[-idx]))
     return(obj)
   }
 
   compute_objective2 <- function(coef, f, idx, C_between, p, epsilon) {
-    obj <- 0.5*((1e-7) * crossprod(coef) + cl2p_loss_function(f[-idx], p, epsilon) +
+    obj <- 0.5*((1e-5) * crossprod(coef) + cl2p_loss_function(f[-idx], p, epsilon) +
            C_between * ls_loss_function(1 - f[idx]))
     return(obj)
   }
@@ -54,10 +54,10 @@ cL2p_ls_tsvm_dual_solver <- function(KernelX, idx, C1, C2,
   obj1      <- NULL
   for (i in 0:irls.steps) {
     if (method_ls == "qr") {
-      coef1_new <- -stack_qrsolve(rbind(sqrt(Fvec/C1) * H, G), GT_e2, 1e-7)
+      coef1_new <- -stack_qrsolve(rbind(sqrt(Fvec/C1) * H, G), GT_e2, 1e-5)
     } else if (method_ls == "normal-chol") {
       A         <- crossprod(H*(Fvec/C1), H) + GTG
-      diag(A)   <- diag(A) + 1e-7
+      diag(A)   <- diag(A) + 1e-5
       coef1_new <- -cholsolve(A, GT_e2)
     }
     f         <- KernelX %*% coef1_new
@@ -75,10 +75,10 @@ cL2p_ls_tsvm_dual_solver <- function(KernelX, idx, C1, C2,
   obj2      <- NULL
   for (i in 0:irls.steps) {
     if (method_ls == "qr") {
-      coef2_new <- stack_qrsolve(rbind(sqrt(Dvec / C2) * G, H), HT_e1, 1e-7)
+      coef2_new <- stack_qrsolve(rbind(sqrt(Dvec / C2) * G, H), HT_e1, 1e-5)
     } else if (method_ls == "normal-chol") {
       B         <- crossprod(G*(Dvec/C2), G) + HTH
-      diag(B)   <- diag(B) + 1e-7
+      diag(B)   <- diag(B) + 1e-5
       coef2_new <- cholsolve(B, HT_e1)
     }
     f         <- KernelX %*% coef2_new

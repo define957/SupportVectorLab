@@ -9,15 +9,15 @@ ls_tsvm_dual_solver <- function(KernelX, idx, C1, C2, method_ls) {
   e2        <- matrix(1, Gn)
 
   if (method_ls == "qr") {
-    coef1 <- -stack_qrsolve(rbind(G, H / sqrt(C1)), crossprod(G, e2), 1e-7)
-    coef2 <-  stack_qrsolve(rbind(H, G / sqrt(C2)), crossprod(H, e1), 1e-7)
+    coef1 <- -stack_qrsolve(rbind(G, H / sqrt(C1)), crossprod(G, e2), 1e-5)
+    coef2 <-  stack_qrsolve(rbind(H, G / sqrt(C2)), crossprod(H, e1), 1e-5)
   } else if (method_ls == "normal-chol") {
     HTH       <- crossprod(H)
     GTG       <- crossprod(G)
     A         <- GTG + HTH/C1
     B         <- HTH + GTG/C2
-    diag(A)   <- diag(A) + 1e-7
-    diag(B)   <- diag(B) + 1e-7
+    diag(A)   <- diag(A) + 1e-5
+    diag(B)   <- diag(B) + 1e-5
     coef1     <- -cholsolve(A, crossprod(G, e2))
     coef2     <-  cholsolve(B, crossprod(H, e1))
   }

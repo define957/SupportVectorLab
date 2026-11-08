@@ -98,7 +98,7 @@ pin_tbsvm_dual_solver <- function(KernelX, idx, C1, C2, C3, C4,
 #' pinball loss. \emph{Applied Intelligence}, 51(8), 5489–5505.
 #' \doi{10.1007/s10489-020-02085-5}
 #' @export
-pin_tbsvm <- function(X, y, C1 = 1, C2 = C1, C3 = 1e-7, C4 = C3,
+pin_tbsvm <- function(X, y, C1 = 1, C2 = C1, C3 = 1e-5, C4 = C3,
                      kernel = c("linear", "rbf", "poly"),
                      tau1 = 0.5, tau2 = tau1,
                      gamma = 1 / ncol(X), degree = 3, coef0 = 0,
