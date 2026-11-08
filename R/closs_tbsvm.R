@@ -61,6 +61,9 @@ closs_tbsvm_dual_solver <- function(KernelX, idx, C1, C2, C3, C4,
       A             <- HTH + crossprod(G_omega_lam, G)
       diag(A)       <- diag(A) + C3
       coef1_new     <- -cholsolve(A, crossprod(G_omega_lam, e2))
+    } else if (method_ls == "svd") {
+      coef1_new     <- -svd_solve(rbind(H, sqrt(Omegavec1*C1_) * G),
+                                      crossprod(G_omega_lam, e2), C3)
     }
     f         <- KernelX %*% coef1_new
     Omegavec1 <- update_omega(1 + f[-idx], sigma1sq)
@@ -84,6 +87,9 @@ closs_tbsvm_dual_solver <- function(KernelX, idx, C1, C2, C3, C4,
       B             <- GTG + crossprod(H_omega_lam, H)
       diag(B)       <- diag(B) + C4
       coef2_new     <- cholsolve(B, crossprod(H_omega_lam, e1))
+    } else if (method_ls == "svd") {
+      coef2_new     <- svd_solve(rbind(G, sqrt(Omegavec2*C2_) * H),
+                                     crossprod(H_omega_lam, e1), C4)
     }
     f         <- KernelX %*% coef2_new
     Omegavec2 <- update_omega(1 - f[idx], sigma2sq)
@@ -128,9 +134,12 @@ closs_tbsvm_dual_solver <- function(KernelX, idx, C1, C2, C3, C4,
 #' @param fit_intercept if set \code{fit_intercept = TRUE},
 #'                      the function will evaluates intercept.
 #' @param reduce_set reduce set for reduce SVM, default \code{reduce_set = NULL}.
-#' @param method_ls solver for the internal linear systems: \code{"qr"} (stacked
-#'                  QR decomposition, never forms Gram matrices) or
-#'                  \code{"normal-chol"} (Cholesky on the normal equations).
+#' @param method_ls solver for the internal linear systems: \code{"svd"}
+#'                  (singular value decomposition of the stacked system with
+#'                  ridge damping, never forms Gram matrices, the default),
+#'                  \code{"qr"} (stacked QR decomposition, never forms Gram
+#'                  matrices) or \code{"normal-chol"} (Cholesky on the normal
+#'                  equations).
 #' @return return \code{TSVMClassifier} object.
 #' @references Xiaohan Zheng, Li Zhang, Leilei Yan (2021).
 #'             CTSVM: A robust twin support vector machine with correntropy-induced
@@ -144,7 +153,7 @@ closs_tbsvm <- function(X, y, C1 = 1, C2 = C1, C3 = 1e-7, C4 = C3,
                         sigma1 = 1, sigma2 = sigma1,
                         eps.hq = 1e-2, hq.steps = 10,
                         fit_intercept = TRUE, reduce_set = NULL,
-                        method_ls = c("qr", "normal-chol")) {
+                        method_ls = c("svd", "qr", "normal-chol")) {
   method_ls <- match.arg(method_ls)
   X         <- as.matrix(X)
   y         <- as.matrix(y)

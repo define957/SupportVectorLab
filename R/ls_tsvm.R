@@ -20,6 +20,9 @@ ls_tsvm_dual_solver <- function(KernelX, idx, C1, C2, method_ls) {
     diag(B)   <- diag(B) + 1e-7
     coef1     <- -cholsolve(A, crossprod(G, e2))
     coef2     <-  cholsolve(B, crossprod(H, e1))
+  } else if (method_ls == "svd") {
+    coef1 <- -svd_solve(rbind(G, H / sqrt(C1)), crossprod(G, e2), 1e-7)
+    coef2 <-  svd_solve(rbind(H, G / sqrt(C2)), crossprod(H, e1), 1e-7)
   }
   BaseDualLeastSquaresTSVMClassifier <- list("coef1" = as.matrix(coef1),
                                              "coef2" = as.matrix(coef2))
@@ -45,16 +48,19 @@ ls_tsvm_dual_solver <- function(KernelX, idx, C1, C2, method_ls) {
 #' @param fit_intercept if set \code{fit_intercept = TRUE},
 #'                      the function will evaluates intercept.
 #' @param reduce_set reduce set for reduce SVM, default \code{reduce_set = NULL}.
-#' @param method_ls solver for the internal linear systems: \code{"qr"} (stacked
-#'                  QR decomposition, never forms Gram matrices) or
-#'                  \code{"normal-chol"} (Cholesky on the normal equations).
+#' @param method_ls solver for the internal linear systems: \code{"svd"}
+#'                  (singular value decomposition of the stacked system with
+#'                  ridge damping, never forms Gram matrices, the default),
+#'                  \code{"qr"} (stacked QR decomposition, never forms Gram
+#'                  matrices) or \code{"normal-chol"} (Cholesky on the normal
+#'                  equations).
 #' @return return \code{TSVMClassifier} object.
 #' @export
 ls_tsvm <- function(X, y, C1 = 1, C2 = C1,
                     kernel = c("linear", "rbf", "poly"),
                     gamma = 1 / ncol(X), degree = 3, coef0 = 0,
                     fit_intercept = TRUE, reduce_set = NULL,
-                    method_ls = c("qr", "normal-chol")) {
+                    method_ls = c("svd", "qr", "normal-chol")) {
   method_ls <- match.arg(method_ls)
   X         <- as.matrix(X)
   y         <- as.matrix(y)
