@@ -94,10 +94,3 @@ qr_aug <- function(x, ridge_stack) {
   qS <- qr(rbind(x, diag(sqrt(ridge_stack), p)), LAPACK = TRUE)
   list(R = qr.R(qS), pivot = qS$pivot)
 }
-
-svd_solve <- function(lhs, rhs, lambda) {
-  lhs_svd <- svd(lhs)
-  V       <- lhs_svd$v
-  d2      <- lhs_svd$d^2
-  V %*% ((1 / (d2 + lambda)) * (t(V) %*% rhs))
-}

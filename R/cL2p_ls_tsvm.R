@@ -59,8 +59,6 @@ cL2p_ls_tsvm_dual_solver <- function(KernelX, idx, C1, C2,
       A         <- crossprod(H*(Fvec/C1), H) + GTG
       diag(A)   <- diag(A) + 1e-7
       coef1_new <- -cholsolve(A, GT_e2)
-    } else if (method_ls == "svd") {
-      coef1_new <- -svd_solve(rbind(sqrt(Fvec/C1) * H, G), GT_e2, 1e-7)
     }
     f         <- KernelX %*% coef1_new
     Fvec      <- update_weight(f[idx], p, epsilon1, irls.reg)
@@ -82,8 +80,6 @@ cL2p_ls_tsvm_dual_solver <- function(KernelX, idx, C1, C2,
       B         <- crossprod(G*(Dvec/C2), G) + HTH
       diag(B)   <- diag(B) + 1e-7
       coef2_new <- cholsolve(B, HT_e1)
-    } else if (method_ls == "svd") {
-      coef2_new <- svd_solve(rbind(sqrt(Dvec / C2) * G, H), HT_e1, 1e-7)
     }
     f         <- KernelX %*% coef2_new
     Dvec      <- update_weight(f[-idx], p, epsilon2, irls.reg)
@@ -130,12 +126,9 @@ cL2p_ls_tsvm_dual_solver <- function(KernelX, idx, C1, C2,
 #'                      the function will evaluates intercept.
 #' @param irls.reg \code{irls.reg} is used to avoid division-by-zero issues when updating weights.
 #' @param reduce_set reduce set for reduce SVM, default \code{reduce_set = NULL}.
-#' @param method_ls solver for the internal linear systems: \code{"svd"}
-#'                  (singular value decomposition of the stacked system with
-#'                  ridge damping, never forms Gram matrices, the default),
-#'                  \code{"qr"} (stacked QR decomposition, never forms Gram
-#'                  matrices) or \code{"normal-chol"} (Cholesky on the normal
-#'                  equations).
+#' @param method_ls solver for the internal linear systems: \code{"qr"} (stacked
+#'                  QR decomposition, never forms Gram matrices) or
+#'                  \code{"normal-chol"} (Cholesky on the normal equations).
 #' @return return \code{TSVMClassifier} object.
 #' @references Chao Yuan, Liming Yang (2021).
 #'             Capped L2,p-norm metric based robust least squares twin support
@@ -149,7 +142,7 @@ cL2p_ls_tsvm <- function(X, y, C1 = 1, C2 = C1,
                          p = 1, epsilon1 = 1, epsilon2 = epsilon1,
                          eps.irls = 1e-2, irls.steps = 10, irls.reg = 1e-4,
                          fit_intercept = TRUE, reduce_set = NULL,
-                         method_ls = c("svd", "qr", "normal-chol")) {
+                         method_ls = c("qr", "normal-chol")) {
   method_ls <- match.arg(method_ls)
   X         <- as.matrix(X)
   y         <- as.matrix(y)

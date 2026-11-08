@@ -13,8 +13,6 @@ pin_tbsvm_dual_solver <- function(KernelX, idx, C1, C2, C3, C4,
     HTH        <- crossprod(H)
     diag(HTH)  <- diag(HTH) + C3
     invHTH_GT  <- cholsolve(HTH, t(G))
-  } else if (method_ls == "svd") {
-    invHTH_GT <- svd_solve(H, t(G), C3)
   }
   dualH1     <- G %*% invHTH_GT
   dualq1     <- matrix(1, Gn)
@@ -36,8 +34,6 @@ pin_tbsvm_dual_solver <- function(KernelX, idx, C1, C2, C3, C4,
     GTG        <- crossprod(G)
     diag(GTG)  <- diag(GTG) + C4
     invGTG_HT  <- cholsolve(GTG, t(H))
-  } else if (method_ls == "svd") {
-    invGTG_HT <- svd_solve(G, t(H), C4)
   }
   dualH2     <- H %*% invGTG_HT
   dualq2     <- matrix(1, Hn)
@@ -93,12 +89,9 @@ pin_tbsvm_dual_solver <- function(KernelX, idx, C1, C2, C3, C4,
 #' @param fit_intercept if set \code{fit_intercept = TRUE},
 #'                      the function will evaluates intercept.
 #' @param reduce_set reduce set for reduce SVM, default \code{reduce_set = NULL}.
-#' @param method_ls solver for the internal linear systems: \code{"svd"}
-#'                  (singular value decomposition of the stacked system with
-#'                  ridge damping, never forms Gram matrices, the default),
-#'                  \code{"qr"} (stacked QR decomposition, never forms Gram
-#'                  matrices) or \code{"normal-chol"} (Cholesky on the normal
-#'                  equations).
+#' @param method_ls solver for the internal linear systems: \code{"qr"} (stacked
+#'                  QR decomposition, never forms Gram matrices) or
+#'                  \code{"normal-chol"} (Cholesky on the normal equations).
 #' @return return \code{TSVMClassifier} object.
 #' @references
 #' Li, K., & Lv, Z. (2021). Smooth twin bounded support vector machine with
@@ -111,7 +104,7 @@ pin_tbsvm <- function(X, y, C1 = 1, C2 = C1, C3 = 1e-7, C4 = C3,
                      gamma = 1 / ncol(X), degree = 3, coef0 = 0,
                      eps = 1e-5, max.steps = 4000,
                      fit_intercept = TRUE, reduce_set = NULL,
-                     method_ls = c("svd", "qr", "normal-chol")) {
+                     method_ls = c("qr", "normal-chol")) {
   method_ls <- match.arg(method_ls)
   X         <- as.matrix(X)
   y         <- as.matrix(y)

@@ -17,7 +17,7 @@ sh_tsvm(
   max.steps = 4000,
   fit_intercept = TRUE,
   reduce_set = NULL,
-  method_ls = c("svd", "qr", "normal-chol")
+  method_ls = c("qr", "normal-chol")
 )
 }
 \arguments{
@@ -47,12 +47,9 @@ the function will evaluates intercept.}
 
 \item{reduce_set}{reduce set for reduce SVM, default \code{reduce_set = NULL}.}
 
-\item{method_ls}{solver for the internal linear systems: \code{"svd"}
-(singular value decomposition of the stacked system with
-ridge damping, never forms Gram matrices, the default),
-\code{"qr"} (stacked QR decomposition, never forms Gram
-matrices) or \code{"normal-chol"} (Cholesky on the normal
-equations).}
+\item{method_ls}{solver for the internal linear systems: \code{"qr"} (stacked
+QR decomposition, never forms Gram matrices) or
+\code{"normal-chol"} (Cholesky on the normal equations).}
 }
 \value{
 return \code{TSVMClassifier} object.
