@@ -50,21 +50,22 @@ closs_tbsvm_dual_solver <- function(KernelX, idx, C1, C2, C3, C4,
     GTG <- crossprod(G)
   }
 
-  Omegavec1 <- rep(1, Gn)
+  # Omegavec1 <- rep(1, Gn)
+  weighed_vec1 <-  rep(1, Gn)
   obj1      <- NULL
   for (i in 0:hq.steps) {
-    G_omega_lam   <- G*(Omegavec1*C1_)
+    G_omega_lam   <- G*(weighed_vec1)
     if (method_ls == "qr") {
-      coef1_new     <- -stack_qrsolve(rbind(H, sqrt(Omegavec1*C1_) * G),
+      coef1_new     <- -stack_qrsolve(rbind(H, sqrt(weighed_vec1) * G),
                                       crossprod(G_omega_lam, e2), C3)
     } else if (method_ls == "normal-chol") {
       A             <- HTH + crossprod(G_omega_lam, G)
       diag(A)       <- diag(A) + C3
       coef1_new     <- -cholsolve(A, crossprod(G_omega_lam, e2))
     }
-    f         <- KernelX %*% coef1_new
-    Omegavec1 <- update_omega(1 + f[-idx], sigma1sq)
-    obj1_new  <- compute_objective1(coef1_new, f, idx, C3, C1, sigma1sq, beta1)
+    f            <- KernelX %*% coef1_new
+    weighed_vec1 <- update_omega(1 + f[-idx], sigma1sq)*C1_
+    obj1_new     <- compute_objective1(coef1_new, f, idx, C3, C1, sigma1sq, beta1)
     if (!is.null(obj1) && function_tolerance(obj1_new, obj1, eps.hq)) {
       coef1 <- coef1_new
       break
@@ -73,21 +74,22 @@ closs_tbsvm_dual_solver <- function(KernelX, idx, C1, C2, C3, C4,
     obj1      <- obj1_new
   }
 
-  Omegavec2 <- rep(1, Hn)
+  # Omegavec2 <- rep(1, Hn)
+  weighed_vec2 <- rep(1, Hn)
   obj2      <- NULL
   for (i in 0:hq.steps) {
-    H_omega_lam   <- H*(Omegavec2*C2_)
+    H_omega_lam   <- H*(weighed_vec2)
     if (method_ls == "qr") {
-      coef2_new     <- stack_qrsolve(rbind(G, sqrt(Omegavec2*C2_) * H),
+      coef2_new     <- stack_qrsolve(rbind(G, sqrt(weighed_vec2) * H),
                                      crossprod(H_omega_lam, e1), C4)
     } else if (method_ls == "normal-chol") {
       B             <- GTG + crossprod(H_omega_lam, H)
       diag(B)       <- diag(B) + C4
       coef2_new     <- cholsolve(B, crossprod(H_omega_lam, e1))
     }
-    f         <- KernelX %*% coef2_new
-    Omegavec2 <- update_omega(1 - f[idx], sigma2sq)
-    obj2_new  <- compute_objective2(coef2_new, f, idx, C4, C2, sigma2sq, beta2)
+    f            <- KernelX %*% coef2_new
+    weighed_vec2 <- update_omega(1 - f[idx], sigma2sq)*C2_
+    obj2_new     <- compute_objective2(coef2_new, f, idx, C4, C2, sigma2sq, beta2)
     if (!is.null(obj2) && function_tolerance(obj2_new, obj2, eps.hq)) {
       coef2 <- coef2_new
       break
