@@ -8,8 +8,8 @@ closs_tbsvm_dual_solver <- function(KernelX, idx, C1, C2, C3, C4,
     return(sum(z^2))
   }
 
-  update_omega <- function(f, sigma_sq) {
-    return(as.vector(exp(-f^2/(2*sigma_sq))))
+  update_weight <- function(f, sigma_sq, beta) {
+    return(as.vector(exp(-f^2/(2*sigma_sq)) * beta / (2*sigma_sq)))
   }
 
   compute_objective1 <- function(coef, f, idx, C_reg, C_between, sigmasq, beta) {
@@ -50,20 +50,19 @@ closs_tbsvm_dual_solver <- function(KernelX, idx, C1, C2, C3, C4,
     GTG <- crossprod(G)
   }
 
-  weighted_vec1 <- rep(1, Gn)
+  weighted_vec1 <- rep(1)
   obj1      <- NULL
   for (i in 0:hq.steps) {
-    G_omega_lam   <- G*(weighted_vec1)
     if (method_ls == "qr") {
-      coef1_new     <- -stack_qrsolve(rbind(H, sqrt(weighted_vec1) * G),
-                                      crossprod(G_omega_lam, e2), C3)
+      coef1_new     <- -stack_qrsolve(rbind(H, sqrt(weighted_vec1*C1) * G),
+                                      crossprod(G*(weighted_vec1*C1), e2), C3)
     } else if (method_ls == "normal-chol") {
-      A             <- HTH + crossprod(G_omega_lam, G)
+      A             <- HTH + crossprod(sqrt(weighted_vec1*C1) * G)
       diag(A)       <- diag(A) + C3
-      coef1_new     <- -cholsolve(A, crossprod(G_omega_lam, e2))
+      coef1_new     <- -cholsolve(A, crossprod(G*(weighted_vec1*C1), e2))
     }
     f             <- KernelX %*% coef1_new
-    weighted_vec1 <- update_omega(1 + f[-idx], sigma1sq)*C1_
+    weighted_vec1 <- update_weight(1 + f[-idx], sigma1sq, beta1)
     obj1_new      <- compute_objective1(coef1_new, f, idx, C3, C1, sigma1sq, beta1)
     if (!is.null(obj1) && function_tolerance(obj1_new, obj1, eps.hq)) {
       coef1 <- coef1_new
@@ -76,17 +75,16 @@ closs_tbsvm_dual_solver <- function(KernelX, idx, C1, C2, C3, C4,
   weighted_vec2 <- rep(1, Hn)
   obj2      <- NULL
   for (i in 0:hq.steps) {
-    H_omega_lam   <- H*(weighted_vec2)
     if (method_ls == "qr") {
-      coef2_new     <- stack_qrsolve(rbind(G, sqrt(weighted_vec2) * H),
-                                     crossprod(H_omega_lam, e1), C4)
+      coef2_new     <- stack_qrsolve(rbind(G, sqrt(weighted_vec2*C2) * H),
+                                     crossprod(H*(weighted_vec2*C2), e1), C4)
     } else if (method_ls == "normal-chol") {
-      B             <- GTG + crossprod(H_omega_lam, H)
+      B             <- GTG + crossprod(sqrt(weighted_vec2*C2) * H)
       diag(B)       <- diag(B) + C4
-      coef2_new     <- cholsolve(B, crossprod(H_omega_lam, e1))
+      coef2_new     <- cholsolve(B, crossprod(H*(weighted_vec2*C2), e1))
     }
     f             <- KernelX %*% coef2_new
-    weighted_vec2 <- update_omega(1 - f[idx], sigma2sq)*C2_
+    weighted_vec2 <- update_weight(1 - f[idx], sigma2sq, beta2)
     obj2_new      <- compute_objective2(coef2_new, f, idx, C4, C2, sigma2sq, beta2)
     if (!is.null(obj2) && function_tolerance(obj2_new, obj2, eps.hq)) {
       coef2 <- coef2_new
