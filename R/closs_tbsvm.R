@@ -50,7 +50,7 @@ closs_tbsvm_dual_solver <- function(KernelX, idx, C1, C2, C3, C4,
     GTG <- crossprod(G)
   }
 
-  weighted_vec1 <- rep(1)
+  weighted_vec1 <- rep(1, Gn)
   obj1      <- NULL
   for (i in 0:hq.steps) {
     if (method_ls == "qr") {
