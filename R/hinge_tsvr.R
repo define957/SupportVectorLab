@@ -4,9 +4,9 @@ hinge_tsvr_dual_solver <- function(KernelX, y, C1, C2, epsilon1, epsilon2,
   xp <- ncol(KernelX)
   G <- KernelX
   if (method_ls == "qr") {
-    GTG_inv_G <- stack_qrsolve(G, t(G), 1e-7)
+    GTG_inv_G <- stack_qrsolve(G, t(G), 1e-5)
   } else if (method_ls == "normal-chol") {
-    GTG_inv_G <- cholsolve(crossprod(G) + diag(1e-7, xp), t(G))
+    GTG_inv_G <- cholsolve(crossprod(G) + diag(1e-5, xp), t(G))
   }
   dualH <- G %*% GTG_inv_G
 
@@ -65,7 +65,7 @@ hinge_tsvr <- function(X, y, C1 = 1, C2 = C1,
                        epsilon1 = 0.1, epsilon2 = epsilon1,
                        kernel = c("linear", "rbf", "poly"),
                        gamma = 1 / ncol(X), degree = 3, coef0 = 0,
-                       eps = 1e-7, max.steps = 4000, fit_intercept = TRUE,
+                       eps = .Machine$double.eps, max.steps = 1e+8, fit_intercept = TRUE,
                        reduce_set = NULL,
                        method_ls = c("qr", "normal-chol")) {
   method_ls <- match.arg(method_ls)

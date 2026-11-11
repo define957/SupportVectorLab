@@ -81,12 +81,12 @@ hinge_w_eps_tsvr_dual_solver <- function(KernelX, y, D1, D2, C1, C2, C3, C4, eps
 #'   parameter.
 #' @return return \code{EPSTSVMRegressor} object.
 #' @export
-hinge_w_eps_tsvr <- function(X, y, C1 = 1, C2 = C1, C3 = 1e-7, C4 = C3,
+hinge_w_eps_tsvr <- function(X, y, C1 = 1, C2 = C1, C3 = 1e-5, C4 = C3,
                              epsilon1 = 0.1, epsilon2 = epsilon1,
                              D1 = rep(1, nrow(X)), D2 = rep(1, nrow(X)),
                              kernel = c("linear", "rbf", "poly"),
                              gamma = 1 / ncol(X), degree = 3, coef0 = 0,
-                             eps = 1e-7, max.steps = 4000, fit_intercept = TRUE,
+                             eps = .Machine$double.eps, max.steps = 1e+8, fit_intercept = TRUE,
                              reduce_set = NULL,
                              method_ls = c("qr", "normal-chol"),
                              weight_f1 = NULL, weight_f2 = NULL,

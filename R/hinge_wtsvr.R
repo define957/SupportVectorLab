@@ -4,9 +4,9 @@ hinge_wtsvr_dual_solver <- function(KernelX, y, D1, D2, C1, C2, epsilon1, epsilo
   xp <- ncol(KernelX)
   G <- KernelX
   if (method_ls == "qr") {
-    GTD1G_inv_GT <- stack_qrsolve(sqrt(D1)*G, t(G), 1e-7)
+    GTD1G_inv_GT <- stack_qrsolve(sqrt(D1)*G, t(G), 1e-5)
   } else if (method_ls == "normal-chol") {
-    GTD1G_inv_GT <- cholsolve(t(G) %*% (D1*G) + diag(1e-7, xp), t(G))
+    GTD1G_inv_GT <- cholsolve(t(G) %*% (D1*G) + diag(1e-5, xp), t(G))
   }
   dualH <- G %*% GTD1G_inv_GT
 
@@ -77,7 +77,7 @@ hinge_wtsvr <- function(X, y, C1 = 1, C2 = C1,
                         D1 = rep(1, nrow(X)), D2 = rep(1, nrow(X)),
                         kernel = c("linear", "rbf", "poly"),
                         gamma = 1 / ncol(X), degree = 3, coef0 = 0,
-                        eps = 1e-7, max.steps = 4000, fit_intercept = TRUE,
+                        eps = .Machine$double.eps, max.steps = 1e+8, fit_intercept = TRUE,
                         reduce_set = NULL,
                         method_ls = c("qr", "normal-chol"),
                         weight_f1 = NULL, weight_f2 = NULL,

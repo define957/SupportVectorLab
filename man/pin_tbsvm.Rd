@@ -9,7 +9,7 @@ pin_tbsvm(
   y,
   C1 = 1,
   C2 = C1,
-  C3 = 1e-07,
+  C3 = 1e-05,
   C4 = C3,
   kernel = c("linear", "rbf", "poly"),
   tau1 = 0.5,
