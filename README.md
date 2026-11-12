@@ -62,6 +62,11 @@ devtools::install_github("define957/SupportVectorLab")
 | `hinge_tsvm()`  | Hinge Loss             | [Khemchandani, R., & Chandra, S. (2007). Twin support vector machines for pattern classification. IEEE Transactions on pattern analysis and machine intelligence, 29(5), 905-910.](https://www.sciencedirect.com/science/article/abs/pii/S0925231218302923)   |
 | `ls_tsvm()`     | Least Squares          | [Kumar, M. A., & Gopal, M. (2009). Least squares twin support vector machines for pattern classification. Expert systems with applications, 36(4), 7535-7543.](https://www.sciencedirect.com/science/article/abs/pii/S0957417408006854)   |
 
+### Twin Support Vector Regression
+| Algorithm          | Loss Function          | References                   |
+|--------------------|------------------------|------------------------------|
+| `rhinge_eps_tsvr()`| Rescaled Hinge         | [Singla, M., Ghosh, D., Shukla, K. K., & Pedrycz, W. (2020). Robust twin support vector regression based on rescaled Hinge loss. Pattern Recognition, 105, 107395.](https://doi.org/10.1016/j.patcog.2020.107395)   |
+
 ### Nonparallel Hyperplane Support Vector Machine
 
 | Algorithm       | Loss Function          | References                   |
