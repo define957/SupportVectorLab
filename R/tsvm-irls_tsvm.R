@@ -121,7 +121,7 @@ irls_tsvm_dual_solver <- function(
 #' @param weight_func1 weight function for the within-class (own-class) loss.
 #'                     It must accept the residual vector as its first
 #'                     argument \code{r} and return a non-negative weight
-#'                     vector of the same length, see the internal \code{capped_lp_weight}.
+#'                     vector of the same length.
 #' @param weight_params1 additional parameters passed to \code{weight_func1}
 #'                       together with the residual \code{r} via \code{do.call}:
 #'                       \code{do.call(weight_func1, c(list(r = r), weight_params1))}.
@@ -134,17 +134,19 @@ irls_tsvm_dual_solver <- function(
 #' @param obj_func objective (loss) function used to monitor the IRLS
 #'                 iterations. It is called as
 #'                 \code{do.call(obj_func, c(list(r_within = r_within, r_between = r_between, C_between = C_between), obj_params))}
-#'                 and must return the scalar data-fitting loss (the
-#'                 regularization term and the outer factor \eqn{1/2} are
-#'                 added by the solver). The default \code{squared_loss} is
-#'                 the plain least squares objective, matching the default
-#'                 unit weights; when custom weight functions implement the
-#'                 IRLS weights of some loss \eqn{\rho}{rho}, i.e.
+#'                 and its return value is used verbatim as the data-fitting
+#'                 loss; the monitored objective is
+#'                 \eqn{\frac{1}{2} C_{reg} \Vert coef \Vert^2 + loss}{0.5*C_reg*crossprod(coef) + loss},
+#'                 i.e. only the regularization term is scaled by the solver.
+#'                 The default \code{tsvm_irls_default_loss} includes the
+#'                 factors \eqn{1/2} and hence matches the default unit
+#'                 weights; when custom weight functions implement the IRLS
+#'                 weights of some loss \eqn{\rho}{rho}, i.e.
 #'                 \eqn{w(r) = \rho'(r)/(2r)}{w(r) = rho'(r)/(2r)}, pass the
 #'                 corresponding loss here for a theoretically sound stopping
 #'                 criterion.
 #' @param obj_params additional parameters passed to \code{obj_func},
-#'                   see the internal \code{squared_loss} for an example.
+#'                   see the internal \code{tsvm_irls_default_loss} for an example.
 #' @param eps.irls the tolerance of the stopping criterion: the IRLS
 #'             iterations stop when the relative change of the objective
 #'             function value is below \code{eps.irls}.
