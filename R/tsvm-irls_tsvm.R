@@ -3,7 +3,7 @@ update_weight <- function(weight_func, r, weight_params) {
 }
 
 tsvm_irls_default_loss <- function(r_within, r_between, C_between) {
-  return(sum(r_within^2) + C_between * sum(r_between^2))
+  return(0.5*sum(r_within^2) + 0.5*C_between * sum(r_between^2))
 }
 
 irls_tsvm_dual_solver <- function(
@@ -28,7 +28,7 @@ irls_tsvm_dual_solver <- function(
     loss <- do.call(obj_func,
                     c(list(r_within = r_within, r_between = r_between,
                            C_between = C_between), obj_params))
-    obj <- 0.5*(C_reg * crossprod(coef) + loss)
+    obj <- 0.5*C_reg * crossprod(coef) + loss
     return(obj)
   }
 
