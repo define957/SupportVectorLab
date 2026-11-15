@@ -74,6 +74,86 @@ devtools::install_github("define957/SupportVectorLab")
 | `hinge_nhsvm()` | Hinge Loss             | [Shao, Y. H., Chen, W. J., & Deng, N. Y. (2014). Nonparallel hyperplane support vector machine for binary classification problems. Information Sciences, 263, 22-35.](https://www.sciencedirect.com/science/article/abs/pii/S0020025513007883)   |
 
 
+## 🧮 From Loss Function to Model: IRLS
+
+SupportVectorLab separates **loss functions**, **weight functions**, and
+**solvers**. A twin model with an arbitrary (non-smooth) loss is implemented
+by `irls_tsvm()`, whose inner loop solves a weighted least-squares TSVM in
+closed form and whose outer loop reweights the samples — the classic
+**Iteratively Reweighted Least Squares (IRLS)** scheme. This section walks
+through the example of **LAD-LAD-TSVM**: a twin SVM whose within-class
+(own-class) and between-class (other-class) losses are both the least
+absolute deviations (LAD) loss.
+
+### The LAD loss and why it needs IRLS
+
+The LAD loss $\rho(r) = |r|$ grows only linearly in the residual, which makes
+it robust to outliers (it generalizes median regression). Its drawback is the
+kink at $r = 0$: there is no closed-form solution. The IRLS trick rewrites
+
+$$|r| = w\, r^2, \qquad w = \frac{1}{|r|},$$
+
+so minimizing $\sum_i |r_i|$ is equivalent to a *weighted* least squares
+problem whose weights depend on the solution itself. IRLS alternates:
+
+1. **Fix the weights** $w_i = 1/\max(|r_i|, \texttt{reg})$ and solve the
+   weighted LS-TSVM system in closed form.
+2. **Update the residuals** from the new solution and recompute the weights.
+3. **Stop** when the relative change of the true (LAD) objective falls below
+   `eps.irls`.
+
+The `reg` floor keeps the weights finite when a residual is exactly $0$
+(which LAD actively seeks, since it interpolates the median).
+
+### Mapping the math onto the package
+
+| Concept | SupportVectorLab function |
+|---|---|
+| LAD loss $\rho(r)=\lvert r\rvert$ | `least_absolute_deviations_loss()` |
+| IRLS weight $w(r)=1/\lvert r\rvert$ | `lad_weight()` (floored at `reg`) |
+| Inner weighted solver | `irls_tsvm()` |
+| Monitored objective | `obj_func` (see below) |
+
+The IRLS weight of a loss $\rho$ is $w(r) = \rho'(r)/r$; for the LAD loss
+this gives exactly $w(r) = 1/|r|$, which is what `lad_weight()` returns.
+
+### Putting it together: LAD-LAD-TSVM
+
+The first "LAD" is the within-class loss, the second is the between-class
+loss; both are supplied to `irls_tsvm()` as weight functions, while the true
+LAD objective is used to monitor convergence:
+
+```r
+library(SupportVectorLab)
+
+# Full objective used to monitor IRLS convergence. Its return value is used
+# verbatim, so the regularization term MUST be included here, with the
+# C_reg passed in (C3 for hyperplane 1, C4 for hyperplane 2):
+lad_tsvm_obj <- function(coef, r_within, r_between, C_reg, C_between) {
+  0.5 * C_reg * sum(coef^2) +
+    least_absolute_deviations_loss(r_within) +
+    C_between * least_absolute_deviations_loss(r_between)
+}
+
+model <- irls_tsvm(
+  X, y,
+  C1 = 1, C2 = 1,          # between-class penalty
+  C3 = 1e-5, C4 = 1e-5,    # regularization
+  weight_func1   = lad_weight, weight_params1   = list(reg = 1e-4),
+  weight_func2   = lad_weight, weight_params2   = list(reg = 1e-4),
+  obj_func       = lad_tsvm_obj,
+  eps.irls       = 1e-4,
+  irls.steps     = 100
+)
+
+pred <- predict(model, X_test)
+```
+
+Because the weight and loss functions are plain R functions, the same recipe
+turns any loss with a usable IRLS weight $w(r) = \rho'(r)/(2r)$ into a twin
+model: implement the loss in `loss-loss_functions.R`, its weight in
+`loss-weight_functions.R`, and pass both to `irls_tsvm()`.
+
 ## ⚙️ Optimization Backends
 
 | Method          | Implementation          | Best For                   | Speed Benchmark           |

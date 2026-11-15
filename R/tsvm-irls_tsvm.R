@@ -2,8 +2,8 @@ update_weight <- function(weight_func, r, weight_params) {
   return(do.call(weight_func, c(list(r = r), as.list(weight_params))))
 }
 
-tsvm_irls_default_loss <- function(r_within, r_between, C_between) {
-  return(0.5*sum(r_within^2) + 0.5*C_between * sum(r_between^2))
+tsvm_irls_default_obj <- function(coef, r_within, r_between, C_reg, C_between) {
+  return(0.5*C_reg*crossprod(coef) + 0.5*sum(r_within^2) + 0.5*C_between * sum(r_between^2))
 }
 
 irls_tsvm_dual_solver <- function(
@@ -25,10 +25,9 @@ irls_tsvm_dual_solver <- function(
   ) {
 
   compute_objective <- function(coef, r_within, r_between, C_reg, C_between) {
-    loss <- do.call(obj_func,
-                    c(list(r_within = r_within, r_between = r_between,
-                           C_between = C_between), obj_params))
-    obj <- 0.5*C_reg * crossprod(coef) + loss
+    obj <- do.call(obj_func,
+                   c(list(coef = coef, r_within = r_within, r_between = r_between,
+                          C_reg = C_reg, C_between = C_between), obj_params))
     return(obj)
   }
 
@@ -131,22 +130,26 @@ irls_tsvm_dual_solver <- function(
 #'                     loss, with the same interface as \code{weight_func1}.
 #' @param weight_params2 additional parameters passed to \code{weight_func2},
 #'                       see \code{weight_params1}.
-#' @param obj_func objective (loss) function used to monitor the IRLS
-#'                 iterations. It is called as
-#'                 \code{do.call(obj_func, c(list(r_within = r_within, r_between = r_between, C_between = C_between), obj_params))}
-#'                 and its return value is used verbatim as the data-fitting
-#'                 loss; the monitored objective is
-#'                 \eqn{\frac{1}{2} C_{reg} \Vert coef \Vert^2 + loss}{0.5*C_reg*crossprod(coef) + loss},
-#'                 i.e. only the regularization term is scaled by the solver.
-#'                 The default \code{tsvm_irls_default_loss} includes the
-#'                 factors \eqn{1/2} and hence matches the default unit
+#' @param obj_func objective function used to monitor the IRLS iterations.
+#'                 It is called as
+#'                 \code{do.call(obj_func, c(list(coef = coef, r_within = r_within, r_between = r_between, C_reg = C_reg, C_between = C_between), obj_params))}
+#'                 and its return value is used verbatim as the monitored
+#'                 objective. The objective MUST include the regularization
+#'                 term
+#'                 \eqn{\frac{1}{2} C_{reg} \Vert coef \Vert^2}{0.5*C_reg*crossprod(coef)}
+#'                 using the \code{C_reg} passed in (\code{C3} for the first
+#'                 hyperplane, \code{C4} for the second): the solver adds
+#'                 nothing on its own, and an \code{obj_func} without this
+#'                 term would monitor a different function than the one being
+#'                 minimized. The default \code{tsvm_irls_default_obj} uses
+#'                 the \eqn{1/2} factors and hence matches the default unit
 #'                 weights; when custom weight functions implement the IRLS
 #'                 weights of some loss \eqn{\rho}{rho}, i.e.
 #'                 \eqn{w(r) = \rho'(r)/r}{w(r) = rho'(r)/r}, pass the
 #'                 corresponding loss here for a theoretically sound stopping
 #'                 criterion.
 #' @param obj_params additional parameters passed to \code{obj_func},
-#'                   see the internal \code{tsvm_irls_default_loss} for an example.
+#'                   see the internal \code{tsvm_irls_default_obj} for an example.
 #' @param eps.irls the tolerance of the stopping criterion: the IRLS
 #'             iterations stop when the relative change of the objective
 #'             function value is below \code{eps.irls}.
@@ -180,7 +183,7 @@ irls_tsvm <- function(
     weight_params1 = NULL,
     weight_func2   = function(r) { rep(1, length(r)) },
     weight_params2 = NULL,
-    obj_func       = tsvm_irls_default_loss,
+    obj_func       = tsvm_irls_default_obj,
     obj_params     = list(),
     eps.irls       = 1e-4,
     irls.steps     = 100,
