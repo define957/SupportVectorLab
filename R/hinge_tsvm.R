@@ -202,9 +202,8 @@ plot.TSVMClassifier <- function(x, ...) {
   coef1 <- model_coef$coef1
   coef2 <- model_coef$coef2
   class_set <- model_specs$class_set
-  idx <- which(y == class_set[1])
-  y[idx] <-  1
-  y[-idx] <- -1
+  ## model_specs$y is already relabeled to +/-1 (+1 = class_set[1]) at fit time
+  idx <- which(y == 1)
   xlim_c <- c(min(model_specs$X[,1]), max(model_specs$X[, 1]))
   ylim_c <- c(min(model_specs$X[,2]), max(model_specs$X[, 2]))
   if (length(coef1) == 3 && length(coef2) == 3) {
