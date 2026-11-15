@@ -78,7 +78,7 @@ The default \code{tsvm_irls_default_loss} includes the
 factors \eqn{1/2} and hence matches the default unit
 weights; when custom weight functions implement the IRLS
 weights of some loss \eqn{\rho}{rho}, i.e.
-\eqn{w(r) = \rho'(r)/(2r)}{w(r) = rho'(r)/(2r)}, pass the
+\eqn{w(r) = \rho'(r)/r}{w(r) = rho'(r)/r}, pass the
 corresponding loss here for a theoretically sound stopping
 criterion.}
 

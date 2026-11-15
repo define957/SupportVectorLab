@@ -49,10 +49,10 @@ irls_tsvm_dual_solver <- function(
     GW  <- sw2 * G
     if (method_ls == "qr") {
       coef1_new <- -stack_qrsolve(rbind(sw1/sqrt(C1) * H, GW),
-                                  crossprod(GW, sw2 * e2), C3)
+                                  crossprod(GW, sw2 * e2), C3/C1)
     } else if (method_ls == "normal-chol") {
       A         <- crossprod(H*(w1/C1), H) + crossprod(G*(w2), G)
-      diag(A)   <- diag(A) + C3
+      diag(A)   <- diag(A) + C3/C1
       coef1_new <- -cholsolve(A, crossprod(G*(w2), e2))
     }
     f         <- KernelX %*% coef1_new
@@ -76,10 +76,10 @@ irls_tsvm_dual_solver <- function(
     HW  <- sw2 * H
     if (method_ls == "qr") {
       coef2_new <- stack_qrsolve(rbind(sw1/sqrt(C2) * G, HW),
-                                 crossprod(HW, sw2 * e1), C4)
+                                 crossprod(HW, sw2 * e1), C4/C2)
     } else if (method_ls == "normal-chol") {
       B         <- crossprod(G*(w1/C2), G) + crossprod(H*(w2), H)
-      diag(B)   <- diag(B) + C4
+      diag(B)   <- diag(B) + C4/C2
       coef2_new <- cholsolve(B, crossprod(H*(w2), e1))
     }
     f         <- KernelX %*% coef2_new
@@ -142,7 +142,7 @@ irls_tsvm_dual_solver <- function(
 #'                 factors \eqn{1/2} and hence matches the default unit
 #'                 weights; when custom weight functions implement the IRLS
 #'                 weights of some loss \eqn{\rho}{rho}, i.e.
-#'                 \eqn{w(r) = \rho'(r)/(2r)}{w(r) = rho'(r)/(2r)}, pass the
+#'                 \eqn{w(r) = \rho'(r)/r}{w(r) = rho'(r)/r}, pass the
 #'                 corresponding loss here for a theoretically sound stopping
 #'                 criterion.
 #' @param obj_params additional parameters passed to \code{obj_func},
