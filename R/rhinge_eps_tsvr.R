@@ -69,7 +69,7 @@ rhinge_eps_tsvr_dual_solver <- function(KernelX, y, C1, C2, C3, C4, epsilon1, ep
   coef2 <- matrix(0, xp)
 
   obj1 <- NULL
-  for (i in 1:hq.steps) {
+  for (i in 0:hq.steps) {
     a1            <- clip_dcd_optimizer(dualH1, q1, lb, ub1, eps, max.steps, a01)$x
     coef1_new     <- GTG_C3_inv_GT %*% (y - a1)
     residuals_f   <- y - KernelX %*% coef1_new
@@ -87,7 +87,7 @@ rhinge_eps_tsvr_dual_solver <- function(KernelX, y, C1, C2, C3, C4, epsilon1, ep
   }
 
   obj2 <- NULL
-  for (i in 1:hq.steps) {
+  for (i in 0:hq.steps) {
     a2            <- clip_dcd_optimizer(dualH2, q2, lb, ub2, eps, max.steps, a02)$x
     coef2_new     <- GTG_C4_inv_GT %*% (y + a2)
     residuals_f   <- y - KernelX %*% coef2_new
